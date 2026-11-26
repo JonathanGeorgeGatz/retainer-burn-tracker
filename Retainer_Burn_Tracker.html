@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Retainer Burn Tracker</title>
+<style>
+:root{--ink:#222831;--paper:#f9f9f6;--line:#d6d3c8;--accent:#27364B;--accent2:#3E8E75;
+--good:#217a3c;--bad:#a8302a;--warn:#8a6a12;--mut:#6a7180}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "Avenir Next","Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:28px 16px 80px}
+header h1{font-size:30px;margin:0 0 4px}
+header p{margin:0;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;letter-spacing:.08em;border:1px solid var(--line);
+border-radius:4px;padding:2px 8px;color:var(--mut);margin-top:10px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:18px}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}
+select,input[type=file]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;max-width:230px}
+button{font:inherit;padding:8px 14px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer}
+button.ghost{background:#fff;color:var(--accent)}
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.stat{flex:1 1 170px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat .n{font-size:25px;font-weight:700}
+.stat .l{font-size:13px;color:var(--mut)}
+.banner{display:none;margin-top:18px;padding:16px 18px;border-radius:10px;font-size:20px;font-weight:700;
+background:#fdebea;border:2px solid var(--bad);color:var(--bad)}
+.trust{display:none;margin-top:18px;padding:16px 18px;border-radius:10px;font-size:20px;font-weight:700;
+background:#fdf6e0;border:2px solid var(--warn);color:var(--warn)}
+h2{font-size:17px;margin:26px 0 8px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+th,td{padding:7px 10px;text-align:left;font-size:14px;border-top:1px solid var(--line)}
+th{background:#f1efe8;border-top:0;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+.up{color:var(--bad);font-weight:600}
+.ok{color:var(--good)}
+.mut{color:var(--mut)}
+#selfaudit{font-size:14px}
+.footnote{color:var(--mut);font-size:13.5px;margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>The Retainer Burn Tracker</h1>
+  <p>Two exports in — hours purchased, hours worked — and every worked minute proves which
+     retainer block paid for it. The hours nobody paid for, the money sitting idle, and the client
+     working off no retainer at all, all named. Offline; nothing leaves this file.</p>
+  <div class="badge">BUILD IT WITH AI &middot; EPISODE 43 &middot; FREE TOOL</div>
+</header>
+
+<div class="panel">
+  <div class="row">
+    <div><label>Retainers CSV (Client, Date, Hours, Rate, Ref)</label>
+      <input type="file" id="fret" accept=".csv,text/csv"></div>
+    <div><label>Worklog CSV (Date, Client, Hours, Note)</label>
+      <input type="file" id="fwork" accept=".csv,text/csv"></div>
+    <div><label>Round entries up to</label>
+      <select id="rnd"><option value="1" selected>the minute</option><option value="6">6 minutes</option><option value="15">15 minutes</option></select></div>
+    <div><label>Blocks expire after</label>
+      <select id="exp"><option value="0" selected>never</option><option value="90">90 days</option><option value="180">180 days</option></select></div>
+    <div><label>"Idle" means quiet for</label>
+      <select id="idl"><option value="30">30 days</option><option value="60" selected>60 days</option><option value="90">90 days</option></select></div>
+    <div><button class="ghost" id="loadsample">Load the Thistledown sample</button></div>
+  </div>
+</div>
+
+<div id="out" class="hidden">
+  <div class="trust" id="trustbanner">DO NOT TRUST THIS AUDIT &mdash; <span id="trustwhy"></span>. Findings withheld.</div>
+  <div class="banner" id="banner">DO NOT EAT THESE HOURS &mdash; <span id="bannerwhy"></span></div>
+
+  <div id="findings">
+  <div class="stats">
+    <div class="stat"><div class="n" id="s_purch">&mdash;</div><div class="l">retainers purchased</div></div>
+    <div class="stat"><div class="n up" id="s_over">&mdash;</div><div class="l">worked past the money (<span id="s_overpct"></span>)</div></div>
+    <div class="stat"><div class="n" id="s_idle">&mdash;</div><div class="l">paid for, sitting idle</div></div>
+    <div class="stat"><div class="n" id="s_rows">&mdash;</div><div class="l">rows read / refused</div></div>
+  </div>
+
+  <h2>Worked past the money (overage)</h2><div id="t_over"></div>
+  <h2>Idle balances</h2><div id="t_idle"></div>
+  <h2>Working with no retainer on file</h2><div id="t_unret"></div>
+  <h2>Expired &amp; forfeited</h2><div id="t_forf"></div>
+  <h2>Duplicate entries (held)</h2><div id="t_dups"></div>
+  <h2>Every retainer client</h2><div id="t_clients"></div>
+  </div>
+
+  <h2>Refused rows</h2><div id="t_refusals"></div>
+  <h2>Self-audit</h2><div class="panel" id="selfaudit"></div>
+</div>
+
+<div class="footnote">
+  This page reads lists, not contracts: whether an overage should be billed, forgiven, or
+  renegotiated stays your call &mdash; it only promises you will decide on purpose. Sample data is
+  fictional (Thistledown Digital; every client invented). Free from the <em>Build It With AI</em>
+  channel &mdash; prompts, spec, sample books and an independent Python checker ship in the same folder.
+</div>
+</div>
+
+<script>/* The Retainer Burn Tracker - engine (the law). Pure function, no DOM, no network.
+   audit(retainersCsv, worklogCsv, {roundMin, expiryDays, idleDays}) per SPEC.md */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.RetainerBurn = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  function parseCSV(text) {
+    const rows = []; let row = [], field = "", inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+        else field += c;
+      } else if (c === '"') inQ = true;
+      else if (c === ",") { row.push(field); field = ""; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(field); field = "";
+        if (row.length > 1 || row[0] !== "") rows.push(row);
+        row = [];
+      } else field += c;
+    }
+    if (field !== "" || row.length) { row.push(field); if (row.length > 1 || row[0] !== "") rows.push(row); }
+    return rows;
+  }
+
+  const DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const leap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  function parseDate(s) {
+    s = s.trim(); let y, m, d, mm;
+    if ((mm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) { y = +mm[1]; m = +mm[2]; d = +mm[3]; }
+    else if ((mm = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) { m = +mm[1]; d = +mm[2]; y = +mm[3]; }
+    else return null;
+    if (m < 1 || m > 12 || d < 1) return null;
+    const max = m === 2 && leap(y) ? 29 : DAYS[m - 1];
+    if (d > max) return null;
+    return { y, m, d };
+  }
+  function epochDays(dt) {
+    let { y, m, d } = dt; y -= m <= 2 ? 1 : 0;
+    const era = Math.floor(y / 400), yoe = y - era * 400;
+    const doy = Math.floor((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1;
+    return era * 146097 + yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy - 719468;
+  }
+  const iso = dt => `${String(dt.y).padStart(4, "0")}-${String(dt.m).padStart(2, "0")}-${String(dt.d).padStart(2, "0")}`;
+
+  function parseHoursToMin(s) { // -> minutes int, or null; negative -> {neg:true}
+    s = String(s).trim();
+    const mm = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(s);
+    if (!mm) return null;
+    const frac = (mm[3] || "").padEnd(2, "0");
+    const hund = parseInt(mm[2], 10) * 100 + parseInt(frac || "0", 10); // hours*100
+    if (hund * 60 % 100 !== 0) return { badMinute: true };
+    const min = hund * 60 / 100;
+    return { min, neg: mm[1] === "-" };
+  }
+  function parseRateCents(s) {
+    s = String(s).trim().replace(/\$/g, "").replace(/,/g, "");
+    const mm = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(s);
+    if (!mm) return null;
+    const cents = parseInt(mm[2], 10) * 100 + parseInt((mm[3] || "").padEnd(2, "0") || "0", 10);
+    return mm[1] === "-" ? -cents : cents;
+  }
+  const ckey = s => s.trim().replace(/\s+/g, " ").toUpperCase();
+  const toCents = (minutes, rateCents) => Math.floor(minutes * rateCents / 60 + 0.5);
+  const round1 = x => Math.floor(x * 10 + 0.5) / 10;
+
+  function audit(retCsv, workCsv, opts) {
+    const roundMin = opts && opts.roundMin !== undefined ? opts.roundMin : 1;
+    const expiryDays = opts && opts.expiryDays !== undefined ? opts.expiryDays : 0;
+    const idleDays = opts && opts.idleDays !== undefined ? opts.idleDays : 60;
+
+    const rRaw = parseCSV(retCsv), wRaw = parseCSV(workCsv);
+    if (!rRaw.length || rRaw.every(r => r.join("").trim() === "")) return { error: "empty file: retainers" };
+    if (!wRaw.length || wRaw.every(r => r.join("").trim() === "")) return { error: "empty file: worklog" };
+    const rh = rRaw[0].map(h => h.trim().toLowerCase());
+    const wh = wRaw[0].map(h => h.trim().toLowerCase());
+    for (const [col, name] of [["client", "Client"], ["date", "Date"], ["hours", "Hours"], ["rate", "Rate"]])
+      if (rh.indexOf(col) < 0) return { error: `missing required column: ${name} (retainers)` };
+    for (const [col, name] of [["date", "Date"], ["client", "Client"], ["hours", "Hours"]])
+      if (wh.indexOf(col) < 0) return { error: `missing required column: ${name} (worklog)` };
+    const rc = { client: rh.indexOf("client"), date: rh.indexOf("date"), hours: rh.indexOf("hours"), rate: rh.indexOf("rate"), ref: rh.indexOf("ref") };
+    const wc = { date: wh.indexOf("date"), client: wh.indexOf("client"), hours: wh.indexOf("hours"), note: wh.indexOf("note") };
+
+    const refusals = [], blocks = [], entries = [];
+    let endEp = null, endDt = null;
+    function checkRow(file, line, dateS, clientS, hoursS, rateS, capMinutes) {
+      const dt = parseDate(dateS || "");
+      if (!dt) { refusals.push({ file, line, reason: "bad date" }); return null; }
+      const ep0 = epochDays(dt);
+      if (endEp === null || ep0 > endEp) { endEp = ep0; endDt = dt; }
+      if ((clientS || "").trim() === "") { refusals.push({ file, line, reason: "blank client" }); return null; }
+      const h = parseHoursToMin(hoursS || "");
+      if (h === null || h.badMinute || h.neg) { refusals.push({ file, line, reason: "bad hours" }); return null; }
+      if (h.min === 0) { refusals.push({ file, line, reason: "zero hours" }); return null; }
+      if (capMinutes && h.min > capMinutes) { refusals.push({ file, line, reason: "hours too large" }); return null; }
+      let rate = undefined;
+      if (rateS !== undefined) {
+        rate = parseRateCents(rateS || "");
+        if (rate === null || rate <= 0) { refusals.push({ file, line, reason: "bad rate" }); return null; }
+      }
+      return { dt, ep: epochDays(dt), key: ckey(clientS), min: h.min, rate };
+    }
+    for (let i = 1; i < rRaw.length; i++) {
+      const r = rRaw[i];
+      const v = checkRow("retainers", i + 1, r[rc.date], r[rc.client], r[rc.hours], r[rc.rate] || "", 0);
+      if (v) blocks.push({ ...v, line: i + 1, remaining: v.min, idx: blocks.length });
+    }
+    for (let i = 1; i < wRaw.length; i++) {
+      const r = wRaw[i];
+      const v = checkRow("worklog", i + 1, r[wc.date], r[wc.client], r[wc.hours], undefined, 1440);
+      if (v) entries.push({ ...v, line: i + 1, note: (wc.note >= 0 ? r[wc.note] || "" : "").trim(), held: false, idx: entries.length });
+    }
+    const totalRows = (rRaw.length - 1) + (wRaw.length - 1);
+
+    // statement end was tracked during validation (any row whose date parses)
+
+    // duplicates (worklog, file order)
+    const dupOut = [];
+    const usedBase = new Set();
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      for (let j = 0; j < i; j++) {
+        const b = entries[j];
+        if (b.held || usedBase.has(b) || b.key !== e.key || b.ep !== e.ep || b.min !== e.min || b.note !== e.note) continue;
+        e.held = true; usedBase.add(b);
+        dupOut.push({ key: e.key, heldLine: e.line, matchedLine: b.line, date: iso(e.dt), minutes: e.min });
+        break;
+      }
+    }
+
+    const byDate = (a, b) => a.ep - b.ep || a.idx - b.idx;
+    const byKey = new Map();
+    for (const b of blocks) { if (!byKey.has(b.key)) byKey.set(b.key, { blocks: [], entries: [] }); byKey.get(b.key).blocks.push(b); }
+    for (const e of entries) { if (e.held) continue; if (!byKey.has(e.key)) byKey.set(e.key, { blocks: [], entries: [] }); byKey.get(e.key).entries.push(e); }
+
+    const clients = [], overOut = [], idleOut = [], unretOut = [], forfOut = [];
+    let totPurch = 0, totPurch2 = 0, totBurn = 0, totOverMin = 0, totOverC = 0, totRem = 0, totForf = 0, totUnret = 0;
+
+    const sortedKeys = [...byKey.keys()];
+    for (const key of sortedKeys) {
+      const g = byKey.get(key);
+      g.blocks.sort(byDate); g.entries.sort(byDate);
+      if (!g.blocks.length) { // unretained
+        const mins = g.entries.reduce((s, e) => s + (roundMin > 1 ? Math.ceil(e.min / roundMin) * roundMin : e.min), 0);
+        unretOut.push({ key, minutes: mins, entries: g.entries.length });
+        totUnret += mins;
+        continue;
+      }
+      let purchC = 0, burnedC = 0, overMin = 0, overC = 0, workedMin = 0;
+      for (const b of g.blocks) { const c = toCents(b.min, b.rate); purchC += c; totPurch2 += c; }
+      for (const e of g.entries) {
+        let need = roundMin > 1 ? Math.ceil(e.min / roundMin) * roundMin : e.min;
+        workedMin += need;
+        for (const b of g.blocks) {
+          if (need === 0) break;
+          if (b.remaining === 0) continue;
+          if (expiryDays > 0 && e.ep > b.ep + expiryDays) continue;
+          const take = Math.min(need, b.remaining);
+          b.remaining -= take; need -= take;
+          burnedC += toCents(take, b.rate);
+        }
+        if (need > 0) {
+          // price at most recent block dated on/before entry; else earliest block
+          let rb = null;
+          for (const b of g.blocks) if (b.ep <= e.ep) rb = b; // blocks date-sorted
+          if (!rb) rb = g.blocks[0];
+          overMin += need; overC += toCents(need, rb.rate);
+        }
+      }
+      let remMin = 0, remC = 0, forfMin = 0, forfC = 0;
+      for (const b of g.blocks) {
+        if (b.remaining === 0) { b.forfeited = false; continue; }
+        const expired = expiryDays > 0 && endEp > b.ep + expiryDays;
+        const c = toCents(b.remaining, b.rate);
+        if (expired) { b.forfeited = true; forfMin += b.remaining; forfC += c; forfOut.push({ key, blockLine: b.line, blockDate: iso(b.dt), minutes: b.remaining, cents: c }); }
+        else { b.forfeited = false; remMin += b.remaining; remC += c; }
+      }
+      const lastWork = g.entries.length ? g.entries[g.entries.length - 1] : null;
+      const idle = remMin > 0 && (lastWork === null || endEp - lastWork.ep > idleDays);
+      if (idle) idleOut.push({ key, remainingMin: remMin, remainingCents: remC, lastWorkDate: lastWork ? iso(lastWork.dt) : null });
+      if (overMin > 0) overOut.push({ key, minutes: overMin, cents: overC });
+      clients.push({
+        key, purchasedMin: g.blocks.reduce((s, b) => s + b.min, 0), purchasedCents: purchC,
+        workedMin, burnedCents: burnedC, overageMin: overMin, overageCents: overC,
+        remainingMin: remMin, remainingCents: remC, forfeitedMin: forfMin, forfeitedCents: forfC,
+        lastWorkDate: lastWork ? iso(lastWork.dt) : null, idle,
+        blocks: g.blocks.map(b => ({ line: b.line, date: iso(b.dt), minutes: b.min, rateCents: b.rate, remaining: b.forfeited ? 0 : b.remaining, forfeited: b.forfeited ? b.remaining : 0 }))
+      });
+      totPurch += purchC; totBurn += burnedC; totOverMin += overMin; totOverC += overC; totRem += remC; totForf += forfC;
+    }
+
+    const banner = totPurch > 0 && totOverC * 10 > totPurch;
+    const overagePct = totPurch > 0 ? round1(totOverC / totPurch * 100) : 0;
+
+    // self-audit
+    const checks = [];
+    checks.push({ name: "refusal rate <= 10%", pass: totalRows === 0 ? false : refusals.length * 10 <= totalRows });
+    let consOk = true;
+    for (const c of clients) {
+      const kept = byKey.get(c.key).entries;
+      const worked = kept.reduce((s, e) => s + (roundMin > 1 ? Math.ceil(e.min / roundMin) * roundMin : e.min), 0);
+      const burnedMin = c.purchasedMin - c.remainingMin - c.forfeitedMin;
+      if (burnedMin + c.overageMin !== worked) consOk = false;
+    }
+    checks.push({ name: "minutes conservation", pass: consOk });
+    checks.push({ name: "purchased cross-check", pass: totPurch === totPurch2 });
+    checks.push({ name: "duplicate explainers", pass: new Set(dupOut.map(d => d.matchedLine)).size === dupOut.length && dupOut.every(d => d.matchedLine !== d.heldLine) });
+    const pass = checks.every(c => c.pass);
+
+    // sort outputs
+    refusals.sort((a, b) => (a.file === b.file ? a.line - b.line : a.file === "retainers" ? -1 : 1));
+    clients.sort((a, b) => b.overageCents - a.overageCents || b.purchasedCents - a.purchasedCents || (a.key < b.key ? -1 : 1));
+    overOut.sort((a, b) => b.cents - a.cents || (a.key < b.key ? -1 : 1));
+    idleOut.sort((a, b) => b.remainingCents - a.remainingCents || (a.key < b.key ? -1 : 1));
+    const kl = (a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : (a.blockLine || a.heldLine || 0) - (b.blockLine || b.heldLine || 0));
+    unretOut.sort((a, b) => (a.key < b.key ? -1 : 1)); forfOut.sort(kl); dupOut.sort(kl);
+
+    const result = {
+      rows: { total: totalRows, kept: blocks.length + entries.filter(e => !e.held).length, refused: refusals.length, held: dupOut.length },
+      refusals, clients, overage: overOut, idle: idleOut, unretained: unretOut, forfeits: forfOut,
+      duplicates: dupOut,
+      totals: { purchasedCents: totPurch, burnedCents: totBurn, overageMin: totOverMin, overageCents: totOverC, remainingCents: totRem, forfeitedCents: totForf, unretainedMin: totUnret, overagePct },
+      banner, selfAudit: { pass, checks }, statementEnd: endDt ? iso(endDt) : null
+    };
+    if (!pass) {
+      result.clients = []; result.overage = []; result.idle = []; result.unretained = [];
+      result.forfeits = []; result.duplicates = []; result.totals = null; result.banner = false; result.withheld = true;
+    }
+    return result;
+  }
+
+  return { audit, ckey, parseHoursToMin, parseRateCents };
+});
+</script>
+<script id="sampleret" type="text/plain">Client,Date,Hours,Rate,Ref
+Alderbrook Dental,2025-10-03,10,95.00,RB-2510A
+Fernwhistle Bakery,2025-11-03,30,90.00,RB-2511F
+Alderbrook Dental,2025-11-03,10,95.00,RB-2511A
+Cartwheel Toys,2025-11-15,5,110.00,RB-2511C
+Alderbrook Dental,2025-12-03,10,95.00,RB-2512A
+Mosslight Yoga,2025-12-08,6,85.00,RB-2512M
+Cartwheel Toys,2025-12-15,5,110.00,RB-2512C
+Alderbrook Dental,2026-01-03,10,95.00,RB-2601A
+Mosslight Yoga,2026-01-08,6,85.00,RB-2601M
+Cartwheel Toys,2026-01-15,5,110.00,RB-2601C
+Hobbs and Vale Law,2026-01-20,8,120.00,RB-2601H
+Alderbrook Dental,2026-02-03,10,95.00,RB-2602A
+Mosslight Yoga,2026-02-08,6,85.00,RB-2602M
+Stonebridge Realty,2026-02-10,20,95.00,RB-2602S
+Cartwheel Toys,2026-02-15,5,110.00,RB-2602C
+Hobbs and Vale Law,2026-02-20,8,120.00,RB-2602H
+Alderbrook Dental,2026-03-03,10,95.00,RB-2603A
+Mosslight Yoga,2026-03-08,6,85.00,RB-2603M
+Cartwheel Toys,2026-03-15,5,110.00,RB-2603C
+Hobbs and Vale Law,2026-03-20,8,120.00,RB-2603H
+Alderbrook Dental,2026-04-03,10,95.00,RB-2604A
+Mosslight Yoga,2026-04-08,6,85.00,RB-2604M
+Penhallow Accounting,2026-04-09,12,105.00,RB-2604P
+Cartwheel Toys,2026-04-15,5,110.00,RB-2604C
+Hobbs and Vale Law,2026-04-20,8,120.00,RB-2604H
+Alderbrook Dental,2026-05-03,10,95.00,RB-2605A
+Mosslight Yoga,2026-05-08,6,85.00,RB-2605M
+Cartwheel Toys,2026-05-15,5,110.00,RB-2605C
+Hobbs and Vale Law,2026-05-20,8,120.00,RB-2605H
+Mosslight Yoga,2026-06-01,6,TBD,RB-BAD2
+Mosslight Yoga,2026-06-08,6,85.00,RB-2606M
+Cartwheel Toys,2026-06-15,5,110.00,RB-2606C
+Hobbs and Vale Law,2026-06-20,8,120.00,RB-2606H
+Mosslight Yoga,2026-07-08,6,85.00,RB-2607M
+Stonebridge Realty,2026-07-08,20,95.00,RB-2607S
+Cartwheel Toys,2026-07-15,5,110.00,RB-2607C
+Hobbs and Vale Law,2026-07-20,8,120.00,RB-2607H
+Copperbeam HVAC,2026-08-05,6,100.00,RB-2608V
+Mosslight Yoga,2026-08-08,6,85.00,RB-2608M
+Cartwheel Toys,2026-08-15,5,110.00,RB-2608C
+Hobbs and Vale Law,2026-08-20,8,120.00,RB-2608H
+Copperbeam HVAC,2026-09-05,6,100.00,RB-2609V
+Mosslight Yoga,2026-09-08,6,85.00,RB-2609M
+Cartwheel Toys,2026-09-15,5,110.00,RB-2609C
+Hobbs and Vale Law,2026-09-20,8,120.00,RB-2609H
+Cartwheel Toys,2026-09-31,5,110.00,RB-BAD1
+Copperbeam HVAC,2026-10-05,6,100.00,RB-2610V
+Mosslight Yoga,2026-10-08,6,85.00,RB-2610M
+Hobbs and Vale Law,2026-10-20,8,120.00,RB-2610H
+</script>
+<script id="samplework" type="text/plain">Date,Client,Hours,Note
+2/30/2026,Alderbrook Dental,2.00,bad date row
+2025-10-06,Alderbrook Dental,2.00,content edits
+2025-10-10,Alderbrook Dental,2.50,ad creative
+2025-10-15,Alderbrook Dental,1.25,content edits
+2025-10-19,Alderbrook Dental,2.50,email templates
+2025-10-23,Alderbrook Dental,1.00,email templates
+2025-10-28,Alderbrook Dental,2.00,landing page build
+2025-11-03,Alderbrook Dental,1.50,menu update
+2025-11-09,Alderbrook Dental,2.50,social assets
+2025-11-14,Alderbrook Dental,1.35,booking form
+2025-11-18,Cartwheel Toys,0.75,photo gallery
+2025-11-19,Alderbrook Dental,2.50,newsletter
+2025-11-20,Fernwhistle Bakery,0.75,ad creative
+2025-11-23,Cartwheel Toys,1.25,campaign management
+2025-11-24,Alderbrook Dental,1.35,email templates
+2025-11-29,Alderbrook Dental,1.25,booking form
+2025-12-01,Cartwheel Toys,0.75,booking form
+2025-12-05,Alderbrook Dental,1.50,email templates
+2025-12-07,Fernwhistle Bakery,1.00,seo tune
+2025-12-07,Cartwheel Toys,0.75,bug fixes
+2025-12-11,Alderbrook Dental,0.80,landing page build
+2025-12-11,Mosslight Yoga,0.50,content edits
+2025-12-12,Cartwheel Toys,0.75,content edits
+2025-12-16,Alderbrook Dental,2.50,social assets
+2025-12-17,Cartwheel Toys,0.75,bug fixes
+2025-12-18,Mosslight Yoga,1.00,analytics review
+2025-12-20,Alderbrook Dental,1.25,seo tune
+2025-12-22,Cartwheel Toys,1.25,menu update
+2025-12-23,Fernwhistle Bakery,0.75,booking form
+2025-12-25,Alderbrook Dental,1.35,photo gallery
+2025-12-25,Mosslight Yoga,1.50,booking form
+2025-12-29,Cartwheel Toys,1.00,campaign management
+2025-12-31,Alderbrook Dental,1.25,campaign management
+2026-01-01,Mosslight Yoga,1.50,landing page build
+2026-01-05,Cartwheel Toys,1.25,seo tune
+2026-01-06,Alderbrook Dental,1.35,email templates
+2026-01-09,Mosslight Yoga,1.50,booking form
+2026-01-11,Alderbrook Dental,2.00,ad creative
+2026-01-11,Fernwhistle Bakery,1.00,campaign management
+2026-01-13,Cartwheel Toys,0.75,menu update
+2026-01-16,Alderbrook Dental,1.00,photo gallery
+2026-01-16,Mosslight Yoga,0.50,seo tune
+2026-01-20,Cartwheel Toys,1.00,bug fixes
+2026-01-20,Alderbrook Dental,1.00,content edits
+2026-01-22,Hobbs and Vale Law,0.85,campaign management
+2026-01-24,Alderbrook Dental,1.25,ad creative
+2026-01-24,Mosslight Yoga,0.50,newsletter
+2026-01-26,Cartwheel Toys,1.25,menu update
+2026-01-27,Fernwhistle Bakery,0.75,campaign management
+2026-01-28,Hobbs and Vale Law,1.35,analytics review
+2026-01-30,Mosslight Yoga,1.00,seo tune
+2026-01-30,Alderbrook Dental,1.50,analytics review
+2026-02-01,Cartwheel Toys,1.00,photo gallery
+2026-02-03,Hobbs and Vale Law,1.35,booking form
+2026-02-05,Alderbrook Dental,1.35,ad creative
+2026-02-07,Mosslight Yoga,0.50,landing page build
+2026-02-08,Cartwheel Toys,1.00,analytics review
+2026-02-08,Hobbs and Vale Law,1.10,content edits
+2026-02-09,Alderbrook Dental,1.00,photo gallery
+2026-02-12,Mosslight Yoga,1.50,site updates
+2026-02-14,Stonebridge Realty,2.00,landing page build
+2026-02-14,Fernwhistle Bakery,1.00,landing page build
+2026-02-14,Cartwheel Toys,1.25,menu update
+2026-02-15,Alderbrook Dental,1.35,bug fixes
+2026-02-15,Hobbs and Vale Law,1.35,landing page build
+2026-02-17,Mosslight Yoga,0.50,analytics review
+2026-02-20,Cartwheel Toys,1.25,bug fixes
+2026-02-20,Hobbs and Vale Law,0.60,bug fixes
+2026-02-21,Stonebridge Realty,2.00,social assets
+2026-02-21,Alderbrook Dental,1.25,booking form
+2026-02-26,Mosslight Yoga,0.50,menu update
+2026-02-27,Alderbrook Dental,0.80,email templates
+2026-02-27,Hobbs and Vale Law,1.35,social assets
+2026-02-28,Cartwheel Toys,0.75,menu update
+2026-03-01,Stonebridge Realty,1.50,analytics review
+2026-03-03,Alderbrook Dental,1.00,seo tune
+2026-03-05,Mosslight Yoga,0.50,social assets
+2026-03-06,Hobbs and Vale Law,0.85,analytics review
+2026-03-07,Alderbrook Dental,0.80,content edits
+2026-03-08,Cartwheel Toys,0.75,bug fixes
+2026-03-09,Fernwhistle Bakery,1.00,seo tune
+2026-03-10,Hobbs and Vale Law,0.60,ad creative
+2026-03-11,Stonebridge Realty,1.50,seo tune
+2026-03-12,Mosslight Yoga,1.50,seo tune
+2026-03-12,Alderbrook Dental,1.00,analytics review
+2026-03-12,Quayside Marine,1.50,bug fixes
+2026-03-16,Alderbrook Dental,1.00,email templates
+2026-03-16,Hobbs and Vale Law,0.85,newsletter
+2026-03-16,Cartwheel Toys,0.75,campaign management
+2026-03-17,Mosslight Yoga,1.50,bug fixes
+2026-03-19,Stonebridge Realty,1.50,campaign management
+2026-03-20,Hobbs and Vale Law,0.60,bug fixes
+2026-03-21,Alderbrook Dental,2.00,content edits
+2026-03-22,Cartwheel Toys,0.75,bug fixes
+2026-03-23,Mosslight Yoga,0.50,landing page build
+2026-03-24,Hobbs and Vale Law,1.35,ad creative
+2026-03-25,Stonebridge Realty,2.00,email templates
+2026-03-26,Fernwhistle Bakery,0.50,seo tune
+2026-03-26,Alderbrook Dental,1.35,menu update
+2026-03-28,Cartwheel Toys,1.25,photo gallery
+2026-03-29,Mosslight Yoga,0.50,booking form
+2026-03-29,Hobbs and Vale Law,1.35,bug fixes
+2026-03-31,Alderbrook Dental,1.50,menu update
+2026-04-01,Quayside Marine,2.00,social assets
+2026-04-01,Stonebridge Realty,1.50,email templates
+2026-04-02,Hobbs and Vale Law,0.60,booking form
+2026-04-03,Cartwheel Toys,1.00,campaign management
+2026-04-03,Mosslight Yoga,1.50,ad creative
+2026-04-06,Alderbrook Dental,1.50,email templates
+2026-04-09,Hobbs and Vale Law,1.10,email templates
+2026-04-09,Stonebridge Realty,2.00,content edits
+2026-04-09,Cartwheel Toys,1.25,analytics review
+2026-04-10,Alderbrook Dental,1.25,social assets
+2026-04-11,Fernwhistle Bakery,0.75,content edits
+2026-04-12,Mosslight Yoga,1.50,content edits
+2026-04-13,Hobbs and Vale Law,1.35,seo tune
+2026-04-14,Penhallow Accounting,3.00,social assets
+2026-04-15,Alderbrook Dental,1.25,photo gallery
+2026-04-16,Cartwheel Toys,0.75,menu update
+2026-04-17,Hobbs and Vale Law,1.10,site updates
+2026-04-18,Mosslight Yoga,0.50,booking form
+2026-04-18,Stonebridge Realty,2.00,social assets
+2026-04-19,Quayside Marine,2.00,newsletter
+2026-04-21,Alderbrook Dental,1.35,bug fixes
+2026-04-23,Mosslight Yoga,1.50,bug fixes
+2026-04-23,Cartwheel Toys,0.75,campaign management
+2026-04-23,Hobbs and Vale Law,0.85,booking form
+2026-04-24,Stonebridge Realty,2.00,menu update
+2026-04-27,Alderbrook Dental,1.50,seo tune
+2026-04-28,Hobbs and Vale Law,1.35,booking form
+2026-04-28,Penhallow Accounting,2.50,campaign management
+2026-04-29,Fernwhistle Bakery,1.00,booking form
+2026-04-29,Cartwheel Toys,0.75,content edits
+2026-05-01,Alderbrook Dental,2.50,seo tune
+2026-05-02,Stonebridge Realty,1.50,content edits
+2026-05-02,Mosslight Yoga,0.50,email templates
+2026-05-03,Hobbs and Vale Law,1.10,campaign management
+2026-05-04,,1.50,blank client row
+2026-05-04,Cartwheel Toys,0.75,social assets
+2026-05-05,Alderbrook Dental,2.00,campaign management
+2026-05-09,Mosslight Yoga,1.00,newsletter
+2026-05-09,Hobbs and Vale Law,1.35,site updates
+2026-05-10,Alderbrook Dental,2.50,ad creative
+2026-05-11,Cartwheel Toys,1.25,photo gallery
+2026-05-11,Stonebridge Realty,1.00,menu update
+2026-05-12,Penhallow Accounting,2.50,seo tune
+2026-05-12,Quayside Marine,2.25,ad creative
+2026-05-15,Alderbrook Dental,2.50,booking form
+2026-05-16,Mosslight Yoga,0.50,newsletter
+2026-05-16,Hobbs and Vale Law,1.10,campaign management
+2026-05-17,Cartwheel Toys,1.25,site updates
+2026-05-19,Fernwhistle Bakery,0.50,photo gallery
+2026-05-19,Stonebridge Realty,2.00,booking form
+2026-05-20,Alderbrook Dental,1.25,email templates
+2026-05-21,Mosslight Yoga,0.50,ad creative
+2026-05-21,Hobbs and Vale Law,0.85,booking form
+2026-05-22,Cartwheel Toys,0.75,newsletter
+2026-05-25,Alderbrook Dental,2.00,content edits
+2026-05-26,Penhallow Accounting,2.00,content edits
+2026-05-27,Hobbs and Vale Law,1.35,ad creative
+2026-05-27,Mosslight Yoga,1.00,ad creative
+2026-05-27,Cartwheel Toys,0.75,campaign management
+2026-05-28,Stonebridge Realty,2.00,booking form
+2026-05-29,Quayside Marine,2.00,content edits
+2026-05-30,Alderbrook Dental,0.80,content edits
+2026-06-02,Hobbs and Vale Law,0.85,bug fixes
+2026-06-02,Cartwheel Toys,1.00,campaign management
+2026-06-03,Stonebridge Realty,2.00,newsletter
+2026-06-03,Alderbrook Dental,2.50,content edits
+2026-06-04,Mosslight Yoga,1.00,menu update
+2026-06-07,Hobbs and Vale Law,0.85,social assets
+2026-06-08,Fernwhistle Bakery,1.00,bug fixes
+2026-06-09,Alderbrook Dental,1.00,photo gallery
+2026-06-09,Penhallow Accounting,2.00,menu update
+2026-06-09,Cartwheel Toys,1.25,campaign management
+2026-06-10,Stonebridge Realty,1.00,landing page build
+2026-06-11,Mosslight Yoga,0.50,landing page build
+2026-06-12,Hobbs and Vale Law,1.10,bug fixes
+2026-06-14,Cartwheel Toys,1.00,ad creative
+2026-06-15,Alderbrook Dental,1.50,booking form
+2026-06-16,Stonebridge Realty,2.00,booking form
+2026-06-16,Mosslight Yoga,1.00,photo gallery
+2026-06-17,Hobbs and Vale Law,1.35,booking form
+2026-06-19,Cartwheel Toys,1.25,email templates
+2026-06-20,Alderbrook Dental,1.35,seo tune
+2026-06-20,Quayside Marine,2.00,content edits
+2026-06-21,Hobbs and Vale Law,0.60,menu update
+2026-06-22,Stonebridge Realty,1.50,seo tune
+2026-06-22,Mosslight Yoga,1.50,menu update
+2026-06-24,Alderbrook Dental,0.80,seo tune
+2026-06-25,Hobbs and Vale Law,1.35,bug fixes
+2026-06-25,Cartwheel Toys,1.00,menu update
+2026-06-29,Fernwhistle Bakery,0.50,campaign management
+2026-06-29,Alderbrook Dental,1.25,landing page build
+2026-06-30,Cartwheel Toys,1.25,newsletter
+2026-06-30,Stonebridge Realty,1.50,campaign management
+2026-07-01,Mosslight Yoga,1.50,campaign management
+2026-07-01,Hobbs and Vale Law,1.35,seo tune
+2026-07-03,Alderbrook Dental,2.00,seo tune
+2026-07-05,Cartwheel Toys,0.75,social assets
+2026-07-06,Hobbs and Vale Law,0.85,menu update
+2026-07-07,Alderbrook Dental,1.35,campaign management
+2026-07-09,Hobbs and Vale Law,90m,typed minutes
+2026-07-10,Cartwheel Toys,0.75,site updates
+2026-07-10,Mosslight Yoga,1.00,email templates
+2026-07-12,Alderbrook Dental,0.80,newsletter
+2026-07-12,Hobbs and Vale Law,1.10,site updates
+2026-07-12,Quayside Marine,2.00,ad creative
+2026-07-16,Mosslight Yoga,1.50,ad creative
+2026-07-16,Alderbrook Dental,0.80,booking form
+2026-07-16,Mosslight Yoga,1.33,a third of an hour
+2026-07-18,Cartwheel Toys,0.75,content edits
+2026-07-19,Fernwhistle Bakery,0.75,campaign management
+2026-07-19,Hobbs and Vale Law,1.10,social assets
+2026-07-20,Alderbrook Dental,2.50,site updates
+2026-07-21,Mosslight Yoga,1.00,email templates
+2026-07-23,Hobbs and Vale Law,0.60,menu update
+2026-07-25,Alderbrook Dental,1.35,seo tune
+2026-07-26,Cartwheel Toys,0.75,photo gallery
+2026-07-27,Hobbs and Vale Law,0.85,social assets
+2026-07-28,Mosslight Yoga,1.50,seo tune
+2026-07-30,Alderbrook Dental,2.00,email templates
+2026-07-31,Hobbs and Vale Law,0.85,campaign management
+2026-08-03,Cartwheel Toys,0.75,newsletter
+2026-08-04,Alderbrook Dental,2.00,menu update
+2026-08-04,Mosslight Yoga,0.50,menu update
+2026-08-04,Hobbs and Vale Law,0.60,content edits
+2026-08-05,Quayside Marine,2.25,photo gallery
+2026-08-06,Hobbs and Vale Law,1.10,intake form revisions
+2026-08-06,Hobbs and Vale Law,1.10,intake form revisions
+2026-08-07,Fernwhistle Bakery,1.00,landing page build
+2026-08-07,Copperbeam HVAC,1.25,landing page build
+2026-08-10,Alderbrook Dental,1.00,campaign management
+2026-08-10,Hobbs and Vale Law,0.85,content edits
+2026-08-11,Cartwheel Toys,0.75,newsletter
+2026-08-11,Mosslight Yoga,1.50,bug fixes
+2026-08-14,Copperbeam HVAC,1.25,landing page build
+2026-08-15,Hobbs and Vale Law,0.85,seo tune
+2026-08-16,Alderbrook Dental,1.50,booking form
+2026-08-18,Cartwheel Toys,0.75,campaign management
+2026-08-20,Mosslight Yoga,0.50,analytics review
+2026-08-20,Alderbrook Dental,1.00,newsletter
+2026-08-20,Hobbs and Vale Law,0.60,bug fixes
+2026-08-20,Quayside Marine,2.00,newsletter
+2026-08-20,Cartwheel Toys,-2,correction attempt
+2026-08-21,Copperbeam HVAC,2.00,email templates
+2026-08-23,Cartwheel Toys,1.00,landing page build
+2026-08-25,Fernwhistle Bakery,0.50,landing page build
+2026-08-25,Hobbs and Vale Law,0.85,menu update
+2026-08-26,Copperbeam HVAC,1.25,bug fixes
+2026-08-26,Alderbrook Dental,1.25,campaign management
+2026-08-29,Mosslight Yoga,1.00,analytics review
+2026-08-30,Cartwheel Toys,1.00,ad creative
+2026-08-31,Alderbrook Dental,2.00,analytics review
+2026-09-01,Hobbs and Vale Law,1.35,content edits
+2026-09-02,Copperbeam HVAC,1.75,ad creative
+2026-09-02,Copperbeam HVAC,0,zero row
+2026-09-05,Mosslight Yoga,0.50,seo tune
+2026-09-06,Alderbrook Dental,2.00,site updates
+2026-09-07,Quayside Marine,2.00,menu update
+2026-09-07,Copperbeam HVAC,2.00,seo tune
+2026-09-08,Hobbs and Vale Law,0.85,ad creative
+2026-09-10,Cartwheel Toys,1.00,fall banner swap
+2026-09-12,Fernwhistle Bakery,0.75,campaign management
+2026-09-12,Alderbrook Dental,1.25,booking form
+2026-09-12,Copperbeam HVAC,1.25,photo gallery
+2026-09-13,Mosslight Yoga,1.00,content edits
+2026-09-15,Hobbs and Vale Law,1.35,landing page build
+2026-09-17,Copperbeam HVAC,1.25,photo gallery
+2026-09-18,Alderbrook Dental,1.00,newsletter
+2026-09-19,Mosslight Yoga,1.50,ad creative
+2026-09-19,Hobbs and Vale Law,0.85,campaign management
+2026-09-22,Alderbrook Dental,0.80,booking form
+2026-09-24,Copperbeam HVAC,1.75,booking form
+2026-09-24,Hobbs and Vale Law,1.35,site updates
+2026-09-26,Alderbrook Dental,1.35,email templates
+2026-09-27,Quayside Marine,2.00,ad creative
+2026-09-28,Mosslight Yoga,1.50,ad creative
+2026-09-29,Copperbeam HVAC,1.75,campaign management
+2026-09-29,Fernwhistle Bakery,1.00,campaign management
+2026-09-30,Alderbrook Dental,1.35,booking form
+2026-10-01,Hobbs and Vale Law,0.60,site updates
+2026-10-04,Copperbeam HVAC,1.25,seo tune
+2026-10-05,Alderbrook Dental,0.80,analytics review
+2026-10-05,Mosslight Yoga,1.50,retreat page
+2026-10-08,Hobbs and Vale Law,1.35,seo tune
+2026-10-09,Alderbrook Dental,1.00,photo gallery
+2026-10-10,Copperbeam HVAC,1.25,ad creative
+2026-10-14,Alderbrook Dental,1.35,ad creative
+2026-10-15,Copperbeam HVAC,1.25,ad creative
+2026-10-15,Hobbs and Vale Law,1.35,campaign management
+2026-10-19,Hobbs and Vale Law,1.35,analytics review
+2026-10-19,Alderbrook Dental,1.50,social assets
+2026-10-21,Quayside Marine,2.25,newsletter
+2026-10-22,Fernwhistle Bakery,0.75,booking form
+2026-10-22,Copperbeam HVAC,1.75,newsletter
+2026-10-25,Alderbrook Dental,1.35,photo gallery
+2026-10-26,Hobbs and Vale Law,0.85,site updates
+2026-10-27,Copperbeam HVAC,1.75,landing page build
+2026-10-29,Alderbrook Dental,2.50,landing page build
+2026-10-30,Hobbs and Vale Law,0.60,photo gallery
+2026-11-02,Copperbeam HVAC,1.25,analytics review
+2026-11-03,Alderbrook Dental,1.35,landing page build
+2026-11-04,Hobbs and Vale Law,0.60,email templates
+2026-11-08,Quayside Marine,2.25,landing page build
+2026-11-08,Copperbeam HVAC,2.00,booking form
+2026-11-08,Hobbs and Vale Law,1.35,bug fixes
+2026-11-09,Alderbrook Dental,1.00,email templates
+2026-11-13,Copperbeam HVAC,1.25,photo gallery
+2026-11-14,Fernwhistle Bakery,1.00,social assets
+2026-11-15,Alderbrook Dental,2.00,site updates
+2026-11-18,Copperbeam HVAC,1.75,newsletter
+2026-11-21,Alderbrook Dental,0.80,site updates
+</script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const money=c=>{const n=Math.abs(c);const s=(n/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});return (c<0?"-$":"$")+s};
+const hm=m=>{const h=Math.floor(m/60),r=m%60;return r?`${h}h ${String(r).padStart(2,"0")}m`:`${h}h`};
+let retText=null, workText=null;
+function dials(){return {roundMin:+$("rnd").value, expiryDays:+$("exp").value, idleDays:+$("idl").value}}
+function table(cols,rows){
+  if(!rows.length)return '<p class="mut">None found.</p>';
+  let h="<table><tr>"+cols.map(c=>`<th${c.r?' class="r"':''}>${c.h}</th>`).join("")+"</tr>";
+  for(const r of rows)h+="<tr>"+cols.map((c,i)=>`<td${c.r?' class="r"':''}>${r[i]}</td>`).join("")+"</tr>";
+  return h+"</table>";
+}
+function render(){
+  if(retText===null||workText===null)return;
+  const r=window.__lastResult=RetainerBurn.audit(retText,workText,dials());
+  $("out").classList.remove("hidden");
+  if(r.error){$("findings").innerHTML='<p class="up">'+r.error+'</p>';return}
+  $("t_refusals").innerHTML=table([{h:"File"},{h:"Line"},{h:"Reason"}],r.refusals.map(x=>[x.file,x.line,x.reason]));
+  const sa=r.selfAudit;
+  $("selfaudit").innerHTML="<ul>"+sa.checks.map(c=>`<li class="${c.pass?'ok':'up'}">${c.pass?'&#10003;':'&#10007;'} ${c.name}</li>`).join("")+"</ul>";
+  if(r.withheld){
+    $("trustbanner").style.display="block";
+    $("trustwhy").textContent=sa.checks.filter(c=>!c.pass).map(c=>c.name).join("; ");
+    $("banner").style.display="none";$("findings").style.display="none";return;
+  }
+  $("trustbanner").style.display="none";$("findings").style.display="";
+  const t=r.totals;
+  $("s_purch").textContent=money(t.purchasedCents);
+  $("s_over").textContent=money(t.overageCents);
+  $("s_overpct").textContent=t.overagePct+"% of purchased";
+  $("s_idle").textContent=money(r.idle.reduce((s,i)=>s+i.remainingCents,0));
+  $("s_rows").textContent=r.rows.total+" / "+r.rows.refused;
+  $("banner").style.display=r.banner?"block":"none";
+  $("bannerwhy").textContent=hm(t.overageMin)+" of work ("+money(t.overageCents)+") has no retainer money behind it — "+t.overagePct+"% of everything purchased";
+  $("t_over").innerHTML=table([{h:"Client"},{h:"Hours past the money",r:1},{h:"Value",r:1}],
+    r.overage.map(o=>[o.key,hm(o.minutes),'<span class="up">'+money(o.cents)+'</span>']));
+  $("t_idle").innerHTML=table([{h:"Client"},{h:"Unused balance",r:1},{h:"Last work"}],
+    r.idle.map(i=>[i.key,money(i.remainingCents),i.lastWorkDate||'<span class="mut">never</span>']));
+  $("t_unret").innerHTML=table([{h:"Client"},{h:"Entries",r:1},{h:"Hours",r:1}],
+    r.unretained.map(u=>[u.key,u.entries,hm(u.minutes)]));
+  $("t_forf").innerHTML=table([{h:"Client"},{h:"Block"},{h:"Expired hours",r:1},{h:"Value",r:1}],
+    r.forfeits.map(f=>[f.key,f.blockDate,hm(f.minutes),money(f.cents)]));
+  $("t_dups").innerHTML=table([{h:"Client"},{h:"Date"},{h:"Minutes",r:1},{h:"Held line",r:1},{h:"Matches line",r:1}],
+    r.duplicates.map(d=>[d.key,d.date,d.minutes,d.heldLine,d.matchedLine]));
+  $("t_clients").innerHTML=table(
+    [{h:"Client"},{h:"Purchased",r:1},{h:"Worked",r:1},{h:"Overage",r:1},{h:"Remaining",r:1},{h:"Last work"}],
+    r.clients.map(c=>[c.key,hm(c.purchasedMin),hm(c.workedMin),
+      c.overageMin?'<span class="up">'+hm(c.overageMin)+'</span>':'—',
+      money(c.remainingCents)+(c.idle?' <span class="up">(idle)</span>':''),c.lastWorkDate||'<span class="mut">never</span>']));
+}
+function hook(id,setter){$(id).addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=()=>{setter(rd.result);render()};rd.readAsText(f);});}
+hook("fret",t=>retText=t);hook("fwork",t=>workText=t);
+$("loadsample").addEventListener("click",()=>{
+  retText=document.getElementById("sampleret").textContent.trim()+"\n";
+  workText=document.getElementById("samplework").textContent.trim()+"\n";render();
+});
+["rnd","exp","idl"].forEach(id=>$(id).addEventListener("change",render));
+window.__render=render;window.__setCsv=(a,b)=>{retText=a;workText=b;render()};
+})();
+</script>
+</body>
+</html>

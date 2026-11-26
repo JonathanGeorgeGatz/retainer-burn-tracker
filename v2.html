@@ -1,0 +1,466 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>v2 — the rebuild that accuses everyone</title>
+<style>body{margin:0;background:#f6f4ef;color:#20242c;font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+.warn{background:#fdebea;border:2px solid #a8302a;color:#a8302a;border-radius:8px;padding:10px 14px;font-weight:700}
+h1{font-size:24px;margin:14px 0 2px} .v{font-size:20px;font-weight:700;margin:14px 0;padding:12px;border-radius:8px;background:#fff;border:1px solid #cfcabd}
+pre{background:#fff;border:1px solid #cfcabd;border-radius:8px;padding:12px;overflow:auto;font-size:12.5px}
+button{font:inherit;padding:8px 14px;border:1px solid #20242c;border-radius:6px;background:#fff;cursor:pointer}</style></head>
+<body><div class="wrap">
+<div class="warn">WRONG BUILD — kept so you can watch it be wrong. The lies are annotated in the source below. Use Retainer_Burn_Tracker.html for real decisions.</div>
+<h1>v2 — the rebuild that accuses everyone</h1>
+<p><button id="go">Run it on the Thistledown sample</button></p>
+<div class="v" id="verdict">&nbsp;</div>
+<pre id="out"></pre>
+<h2>The source, lies annotated</h2>
+<pre id="src"></pre>
+<script id="sret" type="text/plain">Client,Date,Hours,Rate,Ref
+Alderbrook Dental,2025-10-03,10,95.00,RB-2510A
+Fernwhistle Bakery,2025-11-03,30,90.00,RB-2511F
+Alderbrook Dental,2025-11-03,10,95.00,RB-2511A
+Cartwheel Toys,2025-11-15,5,110.00,RB-2511C
+Alderbrook Dental,2025-12-03,10,95.00,RB-2512A
+Mosslight Yoga,2025-12-08,6,85.00,RB-2512M
+Cartwheel Toys,2025-12-15,5,110.00,RB-2512C
+Alderbrook Dental,2026-01-03,10,95.00,RB-2601A
+Mosslight Yoga,2026-01-08,6,85.00,RB-2601M
+Cartwheel Toys,2026-01-15,5,110.00,RB-2601C
+Hobbs and Vale Law,2026-01-20,8,120.00,RB-2601H
+Alderbrook Dental,2026-02-03,10,95.00,RB-2602A
+Mosslight Yoga,2026-02-08,6,85.00,RB-2602M
+Stonebridge Realty,2026-02-10,20,95.00,RB-2602S
+Cartwheel Toys,2026-02-15,5,110.00,RB-2602C
+Hobbs and Vale Law,2026-02-20,8,120.00,RB-2602H
+Alderbrook Dental,2026-03-03,10,95.00,RB-2603A
+Mosslight Yoga,2026-03-08,6,85.00,RB-2603M
+Cartwheel Toys,2026-03-15,5,110.00,RB-2603C
+Hobbs and Vale Law,2026-03-20,8,120.00,RB-2603H
+Alderbrook Dental,2026-04-03,10,95.00,RB-2604A
+Mosslight Yoga,2026-04-08,6,85.00,RB-2604M
+Penhallow Accounting,2026-04-09,12,105.00,RB-2604P
+Cartwheel Toys,2026-04-15,5,110.00,RB-2604C
+Hobbs and Vale Law,2026-04-20,8,120.00,RB-2604H
+Alderbrook Dental,2026-05-03,10,95.00,RB-2605A
+Mosslight Yoga,2026-05-08,6,85.00,RB-2605M
+Cartwheel Toys,2026-05-15,5,110.00,RB-2605C
+Hobbs and Vale Law,2026-05-20,8,120.00,RB-2605H
+Mosslight Yoga,2026-06-01,6,TBD,RB-BAD2
+Mosslight Yoga,2026-06-08,6,85.00,RB-2606M
+Cartwheel Toys,2026-06-15,5,110.00,RB-2606C
+Hobbs and Vale Law,2026-06-20,8,120.00,RB-2606H
+Mosslight Yoga,2026-07-08,6,85.00,RB-2607M
+Stonebridge Realty,2026-07-08,20,95.00,RB-2607S
+Cartwheel Toys,2026-07-15,5,110.00,RB-2607C
+Hobbs and Vale Law,2026-07-20,8,120.00,RB-2607H
+Copperbeam HVAC,2026-08-05,6,100.00,RB-2608V
+Mosslight Yoga,2026-08-08,6,85.00,RB-2608M
+Cartwheel Toys,2026-08-15,5,110.00,RB-2608C
+Hobbs and Vale Law,2026-08-20,8,120.00,RB-2608H
+Copperbeam HVAC,2026-09-05,6,100.00,RB-2609V
+Mosslight Yoga,2026-09-08,6,85.00,RB-2609M
+Cartwheel Toys,2026-09-15,5,110.00,RB-2609C
+Hobbs and Vale Law,2026-09-20,8,120.00,RB-2609H
+Cartwheel Toys,2026-09-31,5,110.00,RB-BAD1
+Copperbeam HVAC,2026-10-05,6,100.00,RB-2610V
+Mosslight Yoga,2026-10-08,6,85.00,RB-2610M
+Hobbs and Vale Law,2026-10-20,8,120.00,RB-2610H
+</script>
+<script id="swork" type="text/plain">Date,Client,Hours,Note
+2/30/2026,Alderbrook Dental,2.00,bad date row
+2025-10-06,Alderbrook Dental,2.00,content edits
+2025-10-10,Alderbrook Dental,2.50,ad creative
+2025-10-15,Alderbrook Dental,1.25,content edits
+2025-10-19,Alderbrook Dental,2.50,email templates
+2025-10-23,Alderbrook Dental,1.00,email templates
+2025-10-28,Alderbrook Dental,2.00,landing page build
+2025-11-03,Alderbrook Dental,1.50,menu update
+2025-11-09,Alderbrook Dental,2.50,social assets
+2025-11-14,Alderbrook Dental,1.35,booking form
+2025-11-18,Cartwheel Toys,0.75,photo gallery
+2025-11-19,Alderbrook Dental,2.50,newsletter
+2025-11-20,Fernwhistle Bakery,0.75,ad creative
+2025-11-23,Cartwheel Toys,1.25,campaign management
+2025-11-24,Alderbrook Dental,1.35,email templates
+2025-11-29,Alderbrook Dental,1.25,booking form
+2025-12-01,Cartwheel Toys,0.75,booking form
+2025-12-05,Alderbrook Dental,1.50,email templates
+2025-12-07,Fernwhistle Bakery,1.00,seo tune
+2025-12-07,Cartwheel Toys,0.75,bug fixes
+2025-12-11,Alderbrook Dental,0.80,landing page build
+2025-12-11,Mosslight Yoga,0.50,content edits
+2025-12-12,Cartwheel Toys,0.75,content edits
+2025-12-16,Alderbrook Dental,2.50,social assets
+2025-12-17,Cartwheel Toys,0.75,bug fixes
+2025-12-18,Mosslight Yoga,1.00,analytics review
+2025-12-20,Alderbrook Dental,1.25,seo tune
+2025-12-22,Cartwheel Toys,1.25,menu update
+2025-12-23,Fernwhistle Bakery,0.75,booking form
+2025-12-25,Alderbrook Dental,1.35,photo gallery
+2025-12-25,Mosslight Yoga,1.50,booking form
+2025-12-29,Cartwheel Toys,1.00,campaign management
+2025-12-31,Alderbrook Dental,1.25,campaign management
+2026-01-01,Mosslight Yoga,1.50,landing page build
+2026-01-05,Cartwheel Toys,1.25,seo tune
+2026-01-06,Alderbrook Dental,1.35,email templates
+2026-01-09,Mosslight Yoga,1.50,booking form
+2026-01-11,Alderbrook Dental,2.00,ad creative
+2026-01-11,Fernwhistle Bakery,1.00,campaign management
+2026-01-13,Cartwheel Toys,0.75,menu update
+2026-01-16,Alderbrook Dental,1.00,photo gallery
+2026-01-16,Mosslight Yoga,0.50,seo tune
+2026-01-20,Cartwheel Toys,1.00,bug fixes
+2026-01-20,Alderbrook Dental,1.00,content edits
+2026-01-22,Hobbs and Vale Law,0.85,campaign management
+2026-01-24,Alderbrook Dental,1.25,ad creative
+2026-01-24,Mosslight Yoga,0.50,newsletter
+2026-01-26,Cartwheel Toys,1.25,menu update
+2026-01-27,Fernwhistle Bakery,0.75,campaign management
+2026-01-28,Hobbs and Vale Law,1.35,analytics review
+2026-01-30,Mosslight Yoga,1.00,seo tune
+2026-01-30,Alderbrook Dental,1.50,analytics review
+2026-02-01,Cartwheel Toys,1.00,photo gallery
+2026-02-03,Hobbs and Vale Law,1.35,booking form
+2026-02-05,Alderbrook Dental,1.35,ad creative
+2026-02-07,Mosslight Yoga,0.50,landing page build
+2026-02-08,Cartwheel Toys,1.00,analytics review
+2026-02-08,Hobbs and Vale Law,1.10,content edits
+2026-02-09,Alderbrook Dental,1.00,photo gallery
+2026-02-12,Mosslight Yoga,1.50,site updates
+2026-02-14,Stonebridge Realty,2.00,landing page build
+2026-02-14,Fernwhistle Bakery,1.00,landing page build
+2026-02-14,Cartwheel Toys,1.25,menu update
+2026-02-15,Alderbrook Dental,1.35,bug fixes
+2026-02-15,Hobbs and Vale Law,1.35,landing page build
+2026-02-17,Mosslight Yoga,0.50,analytics review
+2026-02-20,Cartwheel Toys,1.25,bug fixes
+2026-02-20,Hobbs and Vale Law,0.60,bug fixes
+2026-02-21,Stonebridge Realty,2.00,social assets
+2026-02-21,Alderbrook Dental,1.25,booking form
+2026-02-26,Mosslight Yoga,0.50,menu update
+2026-02-27,Alderbrook Dental,0.80,email templates
+2026-02-27,Hobbs and Vale Law,1.35,social assets
+2026-02-28,Cartwheel Toys,0.75,menu update
+2026-03-01,Stonebridge Realty,1.50,analytics review
+2026-03-03,Alderbrook Dental,1.00,seo tune
+2026-03-05,Mosslight Yoga,0.50,social assets
+2026-03-06,Hobbs and Vale Law,0.85,analytics review
+2026-03-07,Alderbrook Dental,0.80,content edits
+2026-03-08,Cartwheel Toys,0.75,bug fixes
+2026-03-09,Fernwhistle Bakery,1.00,seo tune
+2026-03-10,Hobbs and Vale Law,0.60,ad creative
+2026-03-11,Stonebridge Realty,1.50,seo tune
+2026-03-12,Mosslight Yoga,1.50,seo tune
+2026-03-12,Alderbrook Dental,1.00,analytics review
+2026-03-12,Quayside Marine,1.50,bug fixes
+2026-03-16,Alderbrook Dental,1.00,email templates
+2026-03-16,Hobbs and Vale Law,0.85,newsletter
+2026-03-16,Cartwheel Toys,0.75,campaign management
+2026-03-17,Mosslight Yoga,1.50,bug fixes
+2026-03-19,Stonebridge Realty,1.50,campaign management
+2026-03-20,Hobbs and Vale Law,0.60,bug fixes
+2026-03-21,Alderbrook Dental,2.00,content edits
+2026-03-22,Cartwheel Toys,0.75,bug fixes
+2026-03-23,Mosslight Yoga,0.50,landing page build
+2026-03-24,Hobbs and Vale Law,1.35,ad creative
+2026-03-25,Stonebridge Realty,2.00,email templates
+2026-03-26,Fernwhistle Bakery,0.50,seo tune
+2026-03-26,Alderbrook Dental,1.35,menu update
+2026-03-28,Cartwheel Toys,1.25,photo gallery
+2026-03-29,Mosslight Yoga,0.50,booking form
+2026-03-29,Hobbs and Vale Law,1.35,bug fixes
+2026-03-31,Alderbrook Dental,1.50,menu update
+2026-04-01,Quayside Marine,2.00,social assets
+2026-04-01,Stonebridge Realty,1.50,email templates
+2026-04-02,Hobbs and Vale Law,0.60,booking form
+2026-04-03,Cartwheel Toys,1.00,campaign management
+2026-04-03,Mosslight Yoga,1.50,ad creative
+2026-04-06,Alderbrook Dental,1.50,email templates
+2026-04-09,Hobbs and Vale Law,1.10,email templates
+2026-04-09,Stonebridge Realty,2.00,content edits
+2026-04-09,Cartwheel Toys,1.25,analytics review
+2026-04-10,Alderbrook Dental,1.25,social assets
+2026-04-11,Fernwhistle Bakery,0.75,content edits
+2026-04-12,Mosslight Yoga,1.50,content edits
+2026-04-13,Hobbs and Vale Law,1.35,seo tune
+2026-04-14,Penhallow Accounting,3.00,social assets
+2026-04-15,Alderbrook Dental,1.25,photo gallery
+2026-04-16,Cartwheel Toys,0.75,menu update
+2026-04-17,Hobbs and Vale Law,1.10,site updates
+2026-04-18,Mosslight Yoga,0.50,booking form
+2026-04-18,Stonebridge Realty,2.00,social assets
+2026-04-19,Quayside Marine,2.00,newsletter
+2026-04-21,Alderbrook Dental,1.35,bug fixes
+2026-04-23,Mosslight Yoga,1.50,bug fixes
+2026-04-23,Cartwheel Toys,0.75,campaign management
+2026-04-23,Hobbs and Vale Law,0.85,booking form
+2026-04-24,Stonebridge Realty,2.00,menu update
+2026-04-27,Alderbrook Dental,1.50,seo tune
+2026-04-28,Hobbs and Vale Law,1.35,booking form
+2026-04-28,Penhallow Accounting,2.50,campaign management
+2026-04-29,Fernwhistle Bakery,1.00,booking form
+2026-04-29,Cartwheel Toys,0.75,content edits
+2026-05-01,Alderbrook Dental,2.50,seo tune
+2026-05-02,Stonebridge Realty,1.50,content edits
+2026-05-02,Mosslight Yoga,0.50,email templates
+2026-05-03,Hobbs and Vale Law,1.10,campaign management
+2026-05-04,,1.50,blank client row
+2026-05-04,Cartwheel Toys,0.75,social assets
+2026-05-05,Alderbrook Dental,2.00,campaign management
+2026-05-09,Mosslight Yoga,1.00,newsletter
+2026-05-09,Hobbs and Vale Law,1.35,site updates
+2026-05-10,Alderbrook Dental,2.50,ad creative
+2026-05-11,Cartwheel Toys,1.25,photo gallery
+2026-05-11,Stonebridge Realty,1.00,menu update
+2026-05-12,Penhallow Accounting,2.50,seo tune
+2026-05-12,Quayside Marine,2.25,ad creative
+2026-05-15,Alderbrook Dental,2.50,booking form
+2026-05-16,Mosslight Yoga,0.50,newsletter
+2026-05-16,Hobbs and Vale Law,1.10,campaign management
+2026-05-17,Cartwheel Toys,1.25,site updates
+2026-05-19,Fernwhistle Bakery,0.50,photo gallery
+2026-05-19,Stonebridge Realty,2.00,booking form
+2026-05-20,Alderbrook Dental,1.25,email templates
+2026-05-21,Mosslight Yoga,0.50,ad creative
+2026-05-21,Hobbs and Vale Law,0.85,booking form
+2026-05-22,Cartwheel Toys,0.75,newsletter
+2026-05-25,Alderbrook Dental,2.00,content edits
+2026-05-26,Penhallow Accounting,2.00,content edits
+2026-05-27,Hobbs and Vale Law,1.35,ad creative
+2026-05-27,Mosslight Yoga,1.00,ad creative
+2026-05-27,Cartwheel Toys,0.75,campaign management
+2026-05-28,Stonebridge Realty,2.00,booking form
+2026-05-29,Quayside Marine,2.00,content edits
+2026-05-30,Alderbrook Dental,0.80,content edits
+2026-06-02,Hobbs and Vale Law,0.85,bug fixes
+2026-06-02,Cartwheel Toys,1.00,campaign management
+2026-06-03,Stonebridge Realty,2.00,newsletter
+2026-06-03,Alderbrook Dental,2.50,content edits
+2026-06-04,Mosslight Yoga,1.00,menu update
+2026-06-07,Hobbs and Vale Law,0.85,social assets
+2026-06-08,Fernwhistle Bakery,1.00,bug fixes
+2026-06-09,Alderbrook Dental,1.00,photo gallery
+2026-06-09,Penhallow Accounting,2.00,menu update
+2026-06-09,Cartwheel Toys,1.25,campaign management
+2026-06-10,Stonebridge Realty,1.00,landing page build
+2026-06-11,Mosslight Yoga,0.50,landing page build
+2026-06-12,Hobbs and Vale Law,1.10,bug fixes
+2026-06-14,Cartwheel Toys,1.00,ad creative
+2026-06-15,Alderbrook Dental,1.50,booking form
+2026-06-16,Stonebridge Realty,2.00,booking form
+2026-06-16,Mosslight Yoga,1.00,photo gallery
+2026-06-17,Hobbs and Vale Law,1.35,booking form
+2026-06-19,Cartwheel Toys,1.25,email templates
+2026-06-20,Alderbrook Dental,1.35,seo tune
+2026-06-20,Quayside Marine,2.00,content edits
+2026-06-21,Hobbs and Vale Law,0.60,menu update
+2026-06-22,Stonebridge Realty,1.50,seo tune
+2026-06-22,Mosslight Yoga,1.50,menu update
+2026-06-24,Alderbrook Dental,0.80,seo tune
+2026-06-25,Hobbs and Vale Law,1.35,bug fixes
+2026-06-25,Cartwheel Toys,1.00,menu update
+2026-06-29,Fernwhistle Bakery,0.50,campaign management
+2026-06-29,Alderbrook Dental,1.25,landing page build
+2026-06-30,Cartwheel Toys,1.25,newsletter
+2026-06-30,Stonebridge Realty,1.50,campaign management
+2026-07-01,Mosslight Yoga,1.50,campaign management
+2026-07-01,Hobbs and Vale Law,1.35,seo tune
+2026-07-03,Alderbrook Dental,2.00,seo tune
+2026-07-05,Cartwheel Toys,0.75,social assets
+2026-07-06,Hobbs and Vale Law,0.85,menu update
+2026-07-07,Alderbrook Dental,1.35,campaign management
+2026-07-09,Hobbs and Vale Law,90m,typed minutes
+2026-07-10,Cartwheel Toys,0.75,site updates
+2026-07-10,Mosslight Yoga,1.00,email templates
+2026-07-12,Alderbrook Dental,0.80,newsletter
+2026-07-12,Hobbs and Vale Law,1.10,site updates
+2026-07-12,Quayside Marine,2.00,ad creative
+2026-07-16,Mosslight Yoga,1.50,ad creative
+2026-07-16,Alderbrook Dental,0.80,booking form
+2026-07-16,Mosslight Yoga,1.33,a third of an hour
+2026-07-18,Cartwheel Toys,0.75,content edits
+2026-07-19,Fernwhistle Bakery,0.75,campaign management
+2026-07-19,Hobbs and Vale Law,1.10,social assets
+2026-07-20,Alderbrook Dental,2.50,site updates
+2026-07-21,Mosslight Yoga,1.00,email templates
+2026-07-23,Hobbs and Vale Law,0.60,menu update
+2026-07-25,Alderbrook Dental,1.35,seo tune
+2026-07-26,Cartwheel Toys,0.75,photo gallery
+2026-07-27,Hobbs and Vale Law,0.85,social assets
+2026-07-28,Mosslight Yoga,1.50,seo tune
+2026-07-30,Alderbrook Dental,2.00,email templates
+2026-07-31,Hobbs and Vale Law,0.85,campaign management
+2026-08-03,Cartwheel Toys,0.75,newsletter
+2026-08-04,Alderbrook Dental,2.00,menu update
+2026-08-04,Mosslight Yoga,0.50,menu update
+2026-08-04,Hobbs and Vale Law,0.60,content edits
+2026-08-05,Quayside Marine,2.25,photo gallery
+2026-08-06,Hobbs and Vale Law,1.10,intake form revisions
+2026-08-06,Hobbs and Vale Law,1.10,intake form revisions
+2026-08-07,Fernwhistle Bakery,1.00,landing page build
+2026-08-07,Copperbeam HVAC,1.25,landing page build
+2026-08-10,Alderbrook Dental,1.00,campaign management
+2026-08-10,Hobbs and Vale Law,0.85,content edits
+2026-08-11,Cartwheel Toys,0.75,newsletter
+2026-08-11,Mosslight Yoga,1.50,bug fixes
+2026-08-14,Copperbeam HVAC,1.25,landing page build
+2026-08-15,Hobbs and Vale Law,0.85,seo tune
+2026-08-16,Alderbrook Dental,1.50,booking form
+2026-08-18,Cartwheel Toys,0.75,campaign management
+2026-08-20,Mosslight Yoga,0.50,analytics review
+2026-08-20,Alderbrook Dental,1.00,newsletter
+2026-08-20,Hobbs and Vale Law,0.60,bug fixes
+2026-08-20,Quayside Marine,2.00,newsletter
+2026-08-20,Cartwheel Toys,-2,correction attempt
+2026-08-21,Copperbeam HVAC,2.00,email templates
+2026-08-23,Cartwheel Toys,1.00,landing page build
+2026-08-25,Fernwhistle Bakery,0.50,landing page build
+2026-08-25,Hobbs and Vale Law,0.85,menu update
+2026-08-26,Copperbeam HVAC,1.25,bug fixes
+2026-08-26,Alderbrook Dental,1.25,campaign management
+2026-08-29,Mosslight Yoga,1.00,analytics review
+2026-08-30,Cartwheel Toys,1.00,ad creative
+2026-08-31,Alderbrook Dental,2.00,analytics review
+2026-09-01,Hobbs and Vale Law,1.35,content edits
+2026-09-02,Copperbeam HVAC,1.75,ad creative
+2026-09-02,Copperbeam HVAC,0,zero row
+2026-09-05,Mosslight Yoga,0.50,seo tune
+2026-09-06,Alderbrook Dental,2.00,site updates
+2026-09-07,Quayside Marine,2.00,menu update
+2026-09-07,Copperbeam HVAC,2.00,seo tune
+2026-09-08,Hobbs and Vale Law,0.85,ad creative
+2026-09-10,Cartwheel Toys,1.00,fall banner swap
+2026-09-12,Fernwhistle Bakery,0.75,campaign management
+2026-09-12,Alderbrook Dental,1.25,booking form
+2026-09-12,Copperbeam HVAC,1.25,photo gallery
+2026-09-13,Mosslight Yoga,1.00,content edits
+2026-09-15,Hobbs and Vale Law,1.35,landing page build
+2026-09-17,Copperbeam HVAC,1.25,photo gallery
+2026-09-18,Alderbrook Dental,1.00,newsletter
+2026-09-19,Mosslight Yoga,1.50,ad creative
+2026-09-19,Hobbs and Vale Law,0.85,campaign management
+2026-09-22,Alderbrook Dental,0.80,booking form
+2026-09-24,Copperbeam HVAC,1.75,booking form
+2026-09-24,Hobbs and Vale Law,1.35,site updates
+2026-09-26,Alderbrook Dental,1.35,email templates
+2026-09-27,Quayside Marine,2.00,ad creative
+2026-09-28,Mosslight Yoga,1.50,ad creative
+2026-09-29,Copperbeam HVAC,1.75,campaign management
+2026-09-29,Fernwhistle Bakery,1.00,campaign management
+2026-09-30,Alderbrook Dental,1.35,booking form
+2026-10-01,Hobbs and Vale Law,0.60,site updates
+2026-10-04,Copperbeam HVAC,1.25,seo tune
+2026-10-05,Alderbrook Dental,0.80,analytics review
+2026-10-05,Mosslight Yoga,1.50,retreat page
+2026-10-08,Hobbs and Vale Law,1.35,seo tune
+2026-10-09,Alderbrook Dental,1.00,photo gallery
+2026-10-10,Copperbeam HVAC,1.25,ad creative
+2026-10-14,Alderbrook Dental,1.35,ad creative
+2026-10-15,Copperbeam HVAC,1.25,ad creative
+2026-10-15,Hobbs and Vale Law,1.35,campaign management
+2026-10-19,Hobbs and Vale Law,1.35,analytics review
+2026-10-19,Alderbrook Dental,1.50,social assets
+2026-10-21,Quayside Marine,2.25,newsletter
+2026-10-22,Fernwhistle Bakery,0.75,booking form
+2026-10-22,Copperbeam HVAC,1.75,newsletter
+2026-10-25,Alderbrook Dental,1.35,photo gallery
+2026-10-26,Hobbs and Vale Law,0.85,site updates
+2026-10-27,Copperbeam HVAC,1.75,landing page build
+2026-10-29,Alderbrook Dental,2.50,landing page build
+2026-10-30,Hobbs and Vale Law,0.60,photo gallery
+2026-11-02,Copperbeam HVAC,1.25,analytics review
+2026-11-03,Alderbrook Dental,1.35,landing page build
+2026-11-04,Hobbs and Vale Law,0.60,email templates
+2026-11-08,Quayside Marine,2.25,landing page build
+2026-11-08,Copperbeam HVAC,2.00,booking form
+2026-11-08,Hobbs and Vale Law,1.35,bug fixes
+2026-11-09,Alderbrook Dental,1.00,email templates
+2026-11-13,Copperbeam HVAC,1.25,photo gallery
+2026-11-14,Fernwhistle Bakery,1.00,social assets
+2026-11-15,Alderbrook Dental,2.00,site updates
+2026-11-18,Copperbeam HVAC,1.75,newsletter
+2026-11-21,Alderbrook Dental,0.80,site updates
+</script>
+<script id="eng">/* engine_v2.js — THE REBUILD THAT ACCUSES EVERYONE, kept exactly as it shipped, wrong on
+   purpose. Lies annotated. DO NOT USE FOR REAL DECISIONS. Compare with engine.js. */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.RetainerBurnV2 = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  function ep(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s).trim());
+    return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000 : null;
+  }
+  function audit(retCsv, workCsv) {
+    const lines = t => t.split(/\r?\n/).filter(l => l.trim() !== "").slice(1);
+    const blocks = [], works = [];
+    let maxRate = 0;
+    for (const l of lines(retCsv)) {
+      const p = l.split(","); const h = parseFloat(p[2]); const rate = parseFloat(String(p[3]).replace(/[$,]/g, ""));
+      const e = ep(p[1]);
+      if (isNaN(h) || isNaN(rate) || e === null) continue;  // bad rows still vanish silently
+      blocks.push({ key: p[0].trim().toUpperCase(), ep: e, min: Math.round(h * 60), rate, left: Math.round(h * 60) });
+      if (rate > maxRate) maxRate = rate;
+    }
+    for (const l of lines(workCsv)) {
+      const p = l.split(","); const h = parseFloat(p[2]); const e = ep(p[0]);
+      if (isNaN(h) || h <= 0 || e === null) continue;        // the duplicate stays — LIE #3
+      works.push({ key: p[1].trim().toUpperCase(), ep: e, min: Math.round(h * 60) });
+    }
+    const out = { expired: [], owed: [], missed: [], totalExpiredC: 0, totalOwedC: 0, verdict: "" };
+    const byKey = {};
+    for (const b of blocks) (byKey[b.key] = byKey[b.key] || { blocks: [], works: [] }).blocks.push(b);
+    for (const w of works) (byKey[w.key] = byKey[w.key] || { blocks: [], works: [] }).works.push(w);
+    for (const key in byKey) {
+      const g = byKey[key];
+      g.blocks.sort((a, b) => b.ep - a.ep);  // LIE #1: NEWEST FIRST. Old blocks are starved on
+      // purpose, so they "expire" under the invented rule below even when honest FIFO would
+      // have spent them long ago.
+      let overMin = 0;
+      for (const w of g.works.sort((a, b) => a.ep - b.ep)) {
+        let need = w.min;
+        for (const b of g.blocks) {
+          if (!need) break;
+          if (w.ep - b.ep > 30) continue;    // LIE #2: EVERY block "expires" in 30 days —
+          if (b.ep > w.ep) continue;         // a rule nobody agreed to, invented by the build
+          const take = Math.min(need, b.left); b.left -= take; need -= take;
+        }
+        overMin += need;
+      }
+      for (const b of g.blocks) if (b.left > 0) {
+        const c = Math.round(b.left * b.rate / 60 * 100);
+        out.expired.push({ key, date: b.ep, minutes: b.left, cents: c });
+        out.totalExpiredC += c;
+      }
+      if (overMin > 0) {
+        // LIE #4: hours past the money are billed at the PORTFOLIO'S TOP RATE, whoever's
+        // client they belong to — and the no-retainer client gets the same treatment.
+        const c = Math.round(overMin * maxRate / 60 * 100);
+        out.owed.push({ key, minutes: overMin, cents: c });
+        out.totalOwedC += c;
+      }
+      // LIE #5: a fabricated obligation — every client is scolded for each calendar month
+      // without a retainer purchase, as if "monthly" were in anyone's contract.
+      if (g.blocks.length) {
+        const first = Math.min(...g.blocks.map(b => b.ep)), last = Math.max(...g.blocks.map(b => b.ep));
+        const months = Math.round((last - first) / 30) + 1;
+        const missed = months - g.blocks.length;
+        if (missed > 0) out.missed.push({ key, missed });
+      }
+    }
+    out.verdict = "$" + ((out.totalExpiredC + out.totalOwedC) / 100).toFixed(2) +
+      " of client money has expired or is owed to you. Start the awkward phone calls.";
+    return out;
+  }
+  return { audit };
+});
+</script>
+<script>
+const run=()=>{const a=document.getElementById("sret").textContent.trim()+"\n";
+const b=document.getElementById("swork").textContent.trim()+"\n";
+const r=window.__lastResult=RetainerBurnV2.audit(a,b);
+document.getElementById("verdict").textContent=r.verdict;
+document.getElementById("out").textContent=JSON.stringify(r,null,1).slice(0,20000);};
+document.getElementById("go").addEventListener("click",run);
+document.getElementById("src").textContent=document.getElementById("eng").textContent;
+window.__run=run;
+</script></div></body></html>

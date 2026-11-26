@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Retainer Burn Tracker — free tool</title>
+<style>
+body{margin:0;background:#f9f9f6;color:#222831;font:16px/1.55 "Avenir Next","Segoe UI",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:40px 18px 80px}
+h1{font-size:30px;margin:0 0 6px}
+.sub{color:#6a7180;margin:0 0 26px}
+a.big{display:block;background:#27364B;color:#fff;text-decoration:none;font-size:19px;font-weight:700;
+border-radius:10px;padding:16px 20px;margin:10px 0}
+a.big span{display:block;font-size:13.5px;font-weight:400;opacity:.92;margin-top:2px}
+a.row{display:block;background:#fff;border:1px solid #d6d3c8;color:#222831;text-decoration:none;
+border-radius:10px;padding:12px 16px;margin:8px 0}
+a.row b{color:#3E8E75}
+a.row span{display:block;font-size:13.5px;color:#6a7180}
+.warn{background:#fdf6e0;border:1px solid #8a6a12;color:#6c5410;border-radius:10px;padding:10px 14px;
+font-size:14px;margin:16px 0}
+.foot{color:#6a7180;font-size:13.5px;margin-top:30px;border-top:1px solid #d6d3c8;padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>The Retainer Burn Tracker</h1>
+<p class="sub">Build It With AI &middot; Episode 43 &middot; free, offline, no account. Hours purchased vs
+hours worked, per client, oldest money first: the overage nobody billed, the balances going stale,
+and the client working off no retainer at all.</p>
+
+<a class="big" href="Retainer_Burn_Tracker.html">Open the Retainer Burn Tracker
+<span>One self-contained HTML file. Click "Load the Thistledown sample" or load your own
+retainers + worklog CSVs. Nothing leaves your machine.</span></a>
+
+<a class="row" href="retainer-burn-tracker-kit.zip"><b>Download the whole kit (zip)</b>
+<span>Tool + sample books + spec + prompts + independent Python checker + both wrong builds.</span></a>
+<a class="row" href="sample/retainers.csv"><b>Sample retainers</b> — Thistledown Digital
+<span>Fictional 6-person studio; with sample/worklog.csv, 362 rows, Oct 2025 &ndash; Nov 2026.</span></a>
+<a class="row" href="SPEC.md"><b>SPEC.md</b> — the law the tool implements<span>Integer minutes and
+cents, refusals, FIFO burn, expiry and idle dials, the banner, the self-audit.</span></a>
+<a class="row" href="PROMPTS.md"><b>PROMPTS.md</b> — the three prompts, exactly as sent on camera</a>
+<a class="row" href="checker.py"><b>checker.py</b> — the blind Python rival
+<span>Written from the spec alone; 216 audits, 26,178 values, zero disagreements with the page.</span></a>
+
+<div class="warn">The two wrong builds from the episode are kept runnable, lies annotated:
+<a href="v1.html">v1</a> ("You are 88.38 hours over. Bill somebody.") and <a href="v2.html">v2</a>
+("$40,982 expired or owed" &mdash; about eight times the truth). Don't run your business on either.</div>
+
+<div class="foot">Sample data is fictional; every client is invented. The page reads lists, not
+contracts &mdash; billing, forgiving or renegotiating an overage stays your call. From the
+<em>Build It With AI</em> channel. No warranty.</div>
+</div>
+</body>
+</html>
