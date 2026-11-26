@@ -4,100 +4,258 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Retainer Burn Tracker</title>
+<meta name="description" content="Free, offline retainer burn tracker: hours sold vs hours worked, per client, oldest block first — overage, idle balances, unretained clients.">
 <style>
-:root{--ink:#222831;--paper:#f9f9f6;--line:#d6d3c8;--accent:#27364B;--accent2:#3E8E75;
---good:#217a3c;--bad:#a8302a;--warn:#8a6a12;--mut:#6a7180}
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --surface-2:#eef2f4; --ink:#121a24; --mute:#4f5b69; --dim:#7b8796; --line:#dfe5ea;
+  --brand:#2b7a62; --brand-2:#27364B; --brand-ink:#ffffff; --brand-soft:#e3f2ec;
+  --good:#16865a; --good-bg:#e7f6ef; --warn:#a85a0a; --warn-bg:#fdf1e2; --bad:#c2333a; --bad-bg:#fdecec; --info:#2563c9; --info-bg:#e8f0fd;
+  --r:14px; --shadow:0 1px 2px rgba(16,26,40,.05),0 10px 28px -14px rgba(16,26,40,.24);
+  --f:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --m:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#0d131b; --surface:#141c26; --surface-2:#1b2532; --ink:#e9f0f5; --mute:#9fb0c0; --dim:#6b7c8e; --line:#253243;
+  --brand:#5cc8a3; --brand-2:#8fa7c7; --brand-ink:#08201a; --brand-soft:#123129;
+  --good:#3fbf8a; --good-bg:#10291f; --warn:#e3a04a; --warn-bg:#2d200f; --bad:#f06b70; --bad-bg:#2e1416; --info:#6ea0f5; --info-bg:#132036;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -12px rgba(0,0,0,.6);}}
+:root[data-theme=dark]{
+  --bg:#0d131b; --surface:#141c26; --surface-2:#1b2532; --ink:#e9f0f5; --mute:#9fb0c0; --dim:#6b7c8e; --line:#253243;
+  --brand:#5cc8a3; --brand-2:#8fa7c7; --brand-ink:#08201a; --brand-soft:#123129;
+  --good:#3fbf8a; --good-bg:#10291f; --warn:#e3a04a; --warn-bg:#2d200f; --bad:#f06b70; --bad-bg:#2e1416; --info:#6ea0f5; --info-bg:#132036;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -12px rgba(0,0,0,.6);}
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "Avenir Next","Segoe UI",system-ui,sans-serif}
-.wrap{max-width:1060px;margin:0 auto;padding:28px 16px 80px}
-header h1{font-size:30px;margin:0 0 4px}
-header p{margin:0;color:var(--mut)}
-.badge{display:inline-block;font-size:12px;letter-spacing:.08em;border:1px solid var(--line);
-border-radius:4px;padding:2px 8px;color:var(--mut);margin-top:10px}
-.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:18px}
-.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
-label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}
-select,input[type=file]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;max-width:230px}
-button{font:inherit;padding:8px 14px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer}
-button.ghost{background:#fff;color:var(--accent)}
-.stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
-.stat{flex:1 1 170px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
-.stat .n{font-size:25px;font-weight:700}
-.stat .l{font-size:13px;color:var(--mut)}
-.banner{display:none;margin-top:18px;padding:16px 18px;border-radius:10px;font-size:20px;font-weight:700;
-background:#fdebea;border:2px solid var(--bad);color:var(--bad)}
-.trust{display:none;margin-top:18px;padding:16px 18px;border-radius:10px;font-size:20px;font-weight:700;
-background:#fdf6e0;border:2px solid var(--warn);color:var(--warn)}
-h2{font-size:17px;margin:26px 0 8px}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-th,td{padding:7px 10px;text-align:left;font-size:14px;border-top:1px solid var(--line)}
-th{background:#f1efe8;border-top:0;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
-td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
-.up{color:var(--bad);font-weight:600}
-.ok{color:var(--good)}
-.mut{color:var(--mut)}
-#selfaudit{font-size:14px}
-.footnote{color:var(--mut);font-size:13.5px;margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+@media(min-width:760px){.wrap{padding:0 28px}}
+a{color:inherit}
+/* brand bar */
+.bar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:12px;height:56px}
+.logo{width:30px;height:30px;border-radius:9px;background:var(--brand);display:grid;place-items:center;color:var(--brand-ink);flex:none}
+.bar b{font-weight:750;letter-spacing:-.01em;white-space:nowrap}
+.sp{flex:1}
+.pill{font:600 12px var(--m);color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.pill.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 35%,var(--line))}
+.lnk{color:var(--mute);text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap}
+.lnk:hover{color:var(--ink)}
+@media(max-width:620px){.hide-s{display:none}}
+/* hero */
+.hero{padding:38px 0 22px;display:grid;gap:22px;align-items:end}
+@media(min-width:900px){.hero{grid-template-columns:1.35fr 1fr}}
+.eyebrow{font:700 12px var(--m);letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+h1{font-size:clamp(30px,4.8vw,48px);line-height:1.04;letter-spacing:-.035em;margin:10px 0 12px;font-weight:820}
+h1 em{font-style:normal;color:var(--brand)}
+.sub{color:var(--mute);font-size:17px;max-width:60ch;margin:0}
+.checks{list-style:none;margin:0;padding:16px 18px;display:grid;gap:9px}
+.checks li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--mute)}
+.checks li b{color:var(--ink);font-weight:650}
+.checks .dot{flex:none;width:20px;height:20px;border-radius:6px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font:800 11px var(--m)}
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.grid2{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:860px){.grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.drop{position:relative;padding:20px;min-height:118px;border:1.5px dashed color-mix(in srgb,var(--brand) 35%,var(--line));border-radius:var(--r);background:var(--surface);transition:border-color .15s,background .15s;cursor:pointer;display:flex;gap:16px;align-items:center}
+.drop:hover,.drop.over{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 6%,var(--surface))}
+.drop.loaded{border-style:solid;border-color:color-mix(in srgb,var(--good) 45%,var(--line))}
+.drop .ico{flex:none;width:46px;height:46px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}
+.drop h3{margin:0;font-size:16px}
+.drop .hint{color:var(--mute);font-size:13.5px}
+.drop .cols{font:12px var(--m);color:var(--dim);margin-top:2px}
+.drop .state{font:600 13px var(--f);color:var(--good);margin-top:4px}
+.drop .state:empty{display:none}
+.drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.drop:focus-within{outline:2px solid var(--brand);outline-offset:2px}
+.dials{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0}
+.dial{display:flex;flex-direction:column;gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;flex:1 1 180px}
+.dial label{font:700 11px var(--m);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.dial select{font:650 14.5px var(--f);color:var(--ink);background:transparent;border:0;outline:0;padding:2px 0;cursor:pointer;-webkit-appearance:none;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);background-position:calc(100% - 9px) 55%,calc(100% - 4px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:18px}
+.dial select option{color:#111;background:#fff}
+.dial:focus-within{border-color:var(--brand)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 4px}
+.btn{appearance:none;border:0;border-radius:11px;padding:11px 18px;font:700 15px var(--f);cursor:pointer;transition:transform .1s,box-shadow .15s,background .15s;color:var(--ink)}
+.btn.primary{background:var(--brand);color:var(--brand-ink);box-shadow:0 8px 20px -10px var(--brand)}
+.btn.primary:hover{transform:translateY(-1px)}
+.btn.ghost{background:var(--surface);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--dim)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+/* verdict */
+.banner{display:none;gap:14px;align-items:flex-start;border-radius:var(--r);padding:16px 18px;margin:24px 0 14px;border:1px solid}
+.banner .ic{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:900;font-size:18px}
+.banner h2{margin:0;font-size:19px;letter-spacing:-.01em}
+.banner p{margin:4px 0 0;color:var(--mute)}
+.banner.bad{background:var(--bad-bg);border-color:color-mix(in srgb,var(--bad) 35%,transparent)} .banner.bad .ic{background:var(--bad)} .banner.bad h2{color:var(--bad)}
+.banner.good{background:var(--good-bg);border-color:color-mix(in srgb,var(--good) 35%,transparent)} .banner.good .ic{background:var(--good)} .banner.good h2{color:var(--good)}
+.banner.warn{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 35%,transparent)} .banner.warn .ic{background:var(--warn)} .banner.warn h2{color:var(--warn)}
+/* KPI tiles */
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:900px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi{padding:16px 16px 14px;min-width:0}
+.kpi .k{font:700 11px var(--m);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.kpi .v{font-size:clamp(22px,3vw,28px);font-weight:820;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .d{color:var(--mute);font-size:13px;margin-top:2px}
+.kpi.hot .v{color:var(--bad)}
+.bars{display:flex;gap:3px;align-items:flex-end;height:30px;margin-top:10px}
+.bars i{flex:1;background:color-mix(in srgb,var(--brand) 32%,transparent);border-radius:3px 3px 0 0;min-height:2px}
+.bars i.on{background:var(--bad)}
+/* leak breakdown */
+.leak{padding:16px 18px;margin-top:12px}
+.leak .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.leak h3{margin:0;font-size:15px}
+.leak .top span{font:600 12px var(--m);color:var(--dim)}
+.stack{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:12px 0 10px;background:var(--surface-2)}
+.stack i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--mute)}
+.legend b{color:var(--ink);font-variant-numeric:tabular-nums}
+.legend s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;text-decoration:none}
+.c1{background:var(--bad)} .c2{background:var(--warn)} .c3{background:var(--brand-2)}
+/* sections + table */
+.sec{margin:28px 0 10px;display:flex;align-items:baseline;gap:10px}
+.sec h2{margin:0;font-size:18px;letter-spacing:-.01em}
+.sec .n{font:600 12px var(--m);color:var(--dim)}
+.sec .why2{color:var(--mute);font-size:13px;margin-left:auto;text-align:right}
+@media(max-width:620px){.sec{flex-wrap:wrap}.sec .why2{margin-left:0;text-align:left;width:100%}}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font:700 11px var(--m);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface-2)}
+th.r,td.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.key{font-weight:650}
+td:not(.key){white-space:nowrap}
+td code,.mono{font:12.5px var(--m);color:var(--mute)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 11px var(--m);letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:3px 7px;white-space:nowrap}
+.chip.bad{background:var(--bad-bg);color:var(--bad)} .chip.warn{background:var(--warn-bg);color:var(--warn)} .chip.info{background:var(--info-bg);color:var(--info)} .chip.good{background:var(--good-bg);color:var(--good)} .chip.plain{background:var(--surface-2);color:var(--mute)}
+.none{padding:18px;color:var(--mute);font-size:14px;margin:0}
+.up{color:var(--bad);font-weight:700}
+.mut{color:var(--mute)}
+#selfaudit ul{list-style:none;margin:0;padding:14px;display:flex;flex-wrap:wrap;gap:8px}
+#selfaudit li{display:inline-flex;align-items:center;gap:6px;font:700 11.5px var(--m);letter-spacing:.03em;border-radius:7px;padding:5px 9px}
+#selfaudit li.ok{background:var(--good-bg);color:var(--good)} #selfaudit li.up{background:var(--bad-bg);color:var(--bad)}
+.empty{padding:40px 18px;text-align:center;color:var(--mute);margin-top:24px}
+.empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:4px}
 .hidden{display:none}
+footer{color:var(--dim);font-size:13px;padding:34px 0 54px;border-top:1px solid var(--line);margin-top:38px;display:grid;gap:8px}
+footer a{color:var(--mute)}
+.fade{animation:fade .35s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{.bar,.actions,.dials,.intake,.hero .sub,.hero .checks,footer a.lnk{display:none!important} body{background:#fff;color:#000} .card{box-shadow:none} .hero{padding-top:0}}
+/* burn meter */
+.burn{padding:6px 18px 14px}
+.burn .row{display:grid;grid-template-columns:minmax(120px,190px) 1fr 180px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.burn .row:last-child{border-bottom:0}
+.burn .nm{font-weight:650;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.burn .val{font:600 12.5px var(--m);color:var(--mute);text-align:right;white-space:nowrap;min-width:110px}
+.burn .val.hot{color:var(--bad)}
+.meter{position:relative;height:12px;border-radius:6px;background:var(--surface-2);overflow:visible}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--brand)}
+.meter .over{position:absolute;top:0;bottom:0;border-radius:0 6px 6px 0;background:repeating-linear-gradient(135deg,var(--bad) 0 6px,color-mix(in srgb,var(--bad) 70%,transparent) 6px 12px)}
+.meter .cap{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.55;border-radius:1px}
+.meter.idle .fill{background:var(--warn)}
+@media(max-width:620px){.burn .row{grid-template-columns:1fr auto;gap:6px 10px}.burn .meter{grid-column:1/-1;grid-row:2}}
+.leg2{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--mute);padding:12px 18px 0}
+.leg2 s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <h1>The Retainer Burn Tracker</h1>
-  <p>Two exports in — hours purchased, hours worked — and every worked minute proves which
-     retainer block paid for it. The hours nobody paid for, the money sitting idle, and the client
-     working off no retainer at all, all named. Offline; nothing leaves this file.</p>
-  <div class="badge">BUILD IT WITH AI &middot; EPISODE 43 &middot; FREE TOOL</div>
-</header>
+<header class="bar"><div class="wrap">
+  <div class="logo" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg></div>
+  <b>The Retainer Burn Tracker</b><span class="pill ok hide-s">● runs offline · your files stay on your computer</span>
+  <span class="sp"></span>
+  <a class="lnk hide-s" href="https://jonathangeorgegatz.github.io/tools/" target="_blank" rel="noopener">More free tools</a>
+  <button class="btn ghost" id="theme" style="padding:7px 11px" aria-label="Toggle dark mode">◐</button>
+</div></header>
 
-<div class="panel">
-  <div class="row">
-    <div><label>Retainers CSV (Client, Date, Hours, Rate, Ref)</label>
-      <input type="file" id="fret" accept=".csv,text/csv"></div>
-    <div><label>Worklog CSV (Date, Client, Hours, Note)</label>
-      <input type="file" id="fwork" accept=".csv,text/csv"></div>
-    <div><label>Round entries up to</label>
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Build It With AI · Episode 43 · free tool</div>
+      <h1>Find the hours you worked <em>that nobody paid for.</em></h1>
+      <p class="sub">Two exports in — hours sold, hours worked — and every worked minute has to prove which retainer block paid for it. Oldest money spends first. Nothing is uploaded anywhere.</p>
+    </div>
+    <ul class="card checks" aria-label="What it checks">
+      <li><span class="dot">+</span><span><b>Overage</b> — work past the money, priced at that client's own rate</span></li>
+      <li><span class="dot">z</span><span><b>Idle balances</b> — money collected, no work delivered lately</span></li>
+      <li><span class="dot">?</span><span><b>No retainer on file</b> — clients working off nobody's balance</span></li>
+      <li><span class="dot">×2</span><span><b>Pasted-twice entries held</b> — named by line, never counted again</span></li>
+    </ul>
+  </section>
+
+  <div class="grid2 intake">
+    <label class="drop" id="dropret"><input type="file" id="fret" accept=".csv,text/csv" aria-label="Choose your retainers CSV">
+      <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+      <span><h3>1 · Retainers sold (CSV)</h3><span class="hint">Drop the file here or click to choose.</span>
+      <div class="cols">Client, Date, Hours, Rate, Ref</div><div class="state" id="stateret"></div></span></label>
+    <label class="drop" id="dropwork"><input type="file" id="fwork" accept=".csv,text/csv" aria-label="Choose your worklog CSV">
+      <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <span><h3>2 · Hours worked (CSV)</h3><span class="hint">Drop the file here or click to choose.</span>
+      <div class="cols">Date, Client, Hours, Note</div><div class="state" id="statework"></div></span></label>
+  </div>
+
+  <div class="dials">
+    <div class="dial"><label for="rnd">Round entries up to</label>
       <select id="rnd"><option value="1" selected>the minute</option><option value="6">6 minutes</option><option value="15">15 minutes</option></select></div>
-    <div><label>Blocks expire after</label>
+    <div class="dial"><label for="exp">Blocks expire after</label>
       <select id="exp"><option value="0" selected>never</option><option value="90">90 days</option><option value="180">180 days</option></select></div>
-    <div><label>"Idle" means quiet for</label>
+    <div class="dial"><label for="idl">“Idle” means quiet for</label>
       <select id="idl"><option value="30">30 days</option><option value="60" selected>60 days</option><option value="90">90 days</option></select></div>
-    <div><button class="ghost" id="loadsample">Load the Thistledown sample</button></div>
   </div>
-</div>
-
-<div id="out" class="hidden">
-  <div class="trust" id="trustbanner">DO NOT TRUST THIS AUDIT &mdash; <span id="trustwhy"></span>. Findings withheld.</div>
-  <div class="banner" id="banner">DO NOT EAT THESE HOURS &mdash; <span id="bannerwhy"></span></div>
-
-  <div id="findings">
-  <div class="stats">
-    <div class="stat"><div class="n" id="s_purch">&mdash;</div><div class="l">retainers purchased</div></div>
-    <div class="stat"><div class="n up" id="s_over">&mdash;</div><div class="l">worked past the money (<span id="s_overpct"></span>)</div></div>
-    <div class="stat"><div class="n" id="s_idle">&mdash;</div><div class="l">paid for, sitting idle</div></div>
-    <div class="stat"><div class="n" id="s_rows">&mdash;</div><div class="l">rows read / refused</div></div>
+  <div class="actions">
+    <button class="btn primary" id="loadsample">Try the sample business</button>
+    <span class="mut" id="waiting" style="font-size:13.5px">Thistledown Digital · 362 rows · fictional</span>
+    <span class="sp"></span>
+    <button class="btn ghost" id="csv" disabled>Download findings (CSV)</button>
+    <button class="btn ghost" id="print" disabled>Print / PDF</button>
   </div>
 
-  <h2>Worked past the money (overage)</h2><div id="t_over"></div>
-  <h2>Idle balances</h2><div id="t_idle"></div>
-  <h2>Working with no retainer on file</h2><div id="t_unret"></div>
-  <h2>Expired &amp; forfeited</h2><div id="t_forf"></div>
-  <h2>Duplicate entries (held)</h2><div id="t_dups"></div>
-  <h2>Every retainer client</h2><div id="t_clients"></div>
+  <div class="card empty fade" id="empty"><b>Nothing audited yet</b>Load both files, or press “Try the sample business” to see a full report on made-up data.</div>
+
+  <div id="out" class="hidden">
+    <div class="banner warn fade" id="trustbanner" role="alert"><div class="ic">!</div><div><h2>DO NOT TRUST THIS AUDIT</h2><p><span id="trustwhy"></span>. Findings withheld — only the refused rows are shown below.</p></div></div>
+    <div class="banner bad fade" id="banner" role="alert"><div class="ic">!</div><div><h2>DO NOT EAT THESE HOURS</h2><p id="bannerwhy"></p></div></div>
+    <div class="banner good fade" id="okbanner"><div class="ic">✓</div><div><h2>Under the 10% line</h2><p id="okwhy"></p></div></div>
+
+    <div id="findings">
+      <div class="kpis fade">
+        <div class="card kpi"><div class="k">Retainers purchased</div><div class="v" id="s_purch">—</div><div class="d" id="s_purchd">&nbsp;</div></div>
+        <div class="card kpi hot"><div class="k">Worked past the money</div><div class="v" id="s_over">—</div><div class="d"><span id="s_overpct"></span></div></div>
+        <div class="card kpi"><div class="k">Paid for, sitting idle</div><div class="v" id="s_idle">—</div><div class="d" id="s_idled">&nbsp;</div></div>
+        <div class="card kpi"><div class="k">Rows read / refused</div><div class="v" id="s_rows">—</div><div class="d" id="s_rowsd">&nbsp;</div></div>
+      </div>
+
+      <div class="sec"><h2>Burn by client</h2><span class="n">worked vs purchased</span><span class="why2">the tick is 100% of the hours they paid for</span></div>
+      <div class="card fade"><div class="leg2"><span><s style="background:var(--brand)"></s>covered by a block</span><span><s style="background:var(--bad)"></s>past the money</span><span><s style="background:var(--warn)"></s>idle balance</span></div><div class="burn" id="burn"></div></div>
+
+      <div class="grid2">
+        <div><div class="sec"><h2>Worked past the money</h2><span class="n" id="n_over"></span></div><div class="card tbl fade" id="t_over"></div></div>
+        <div><div class="sec"><h2>Idle balances</h2><span class="n" id="n_idle"></span></div><div class="card tbl fade" id="t_idle"></div></div>
+      </div>
+      <div class="grid2">
+        <div><div class="sec"><h2>No retainer on file</h2><span class="n" id="n_unret"></span></div><div class="card tbl fade" id="t_unret"></div></div>
+        <div><div class="sec"><h2>Duplicate entries</h2><span class="n" id="n_dups"></span><span class="why2">held, not counted twice</span></div><div class="card tbl fade" id="t_dups"></div></div>
+      </div>
+      <div class="sec"><h2>Expired &amp; forfeited</h2><span class="n" id="n_forf"></span><span class="why2">only when the expiry dial is on</span></div>
+      <div class="card tbl fade" id="t_forf"></div>
+      <div class="sec"><h2>Every retainer client</h2><span class="n" id="n_clients"></span><span class="why2">oldest block burns first</span></div>
+      <div class="card tbl fade" id="t_clients"></div>
+    </div>
+
+    <div class="grid2">
+      <div><div class="sec"><h2>Rows it refused to guess at</h2><span class="n" id="n_refusals"></span></div><div class="card tbl fade" id="t_refusals"></div></div>
+      <div><div class="sec"><h2>Self-audit</h2><span class="n">runs every time</span></div><div class="card fade" id="selfaudit"></div></div>
+    </div>
   </div>
 
-  <h2>Refused rows</h2><div id="t_refusals"></div>
-  <h2>Self-audit</h2><div class="panel" id="selfaudit"></div>
-</div>
-
-<div class="footnote">
-  This page reads lists, not contracts: whether an overage should be billed, forgiven, or
-  renegotiated stays your call &mdash; it only promises you will decide on purpose. Sample data is
-  fictional (Thistledown Digital; every client invented). Free from the <em>Build It With AI</em>
-  channel &mdash; prompts, spec, sample books and an independent Python checker ship in the same folder.
-</div>
-</div>
+  <footer>
+    <div>This page reads lists, not contracts: whether an overage gets billed, forgiven or renegotiated stays your call — it only promises you'll decide on purpose.</div>
+    <div>Sample data is fictional (Thistledown Digital; every client invented). Prompts, spec, sample files and an independent Python checker ship in the same folder. Not legal or accounting advice.</div>
+    <div>Made on <a href="https://www.youtube.com/@jonathangatz" target="_blank" rel="noopener">Build It With AI</a> · <a class="lnk" href="https://jonathangeorgegatz.github.io/tools/" target="_blank" rel="noopener">all the free tools</a></div>
+  </footer>
+</main>
 
 <script>/* The Retainer Burn Tracker - engine (the law). Pure function, no DOM, no network.
    audit(retainersCsv, worklogCsv, {roundMin, expiryDays, idleDays}) per SPEC.md */
@@ -708,60 +866,118 @@ Hobbs and Vale Law,2026-10-20,8,120.00,RB-2610H
 const $=id=>document.getElementById(id);
 const money=c=>{const n=Math.abs(c);const s=(n/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});return (c<0?"-$":"$")+s};
 const hm=m=>{const h=Math.floor(m/60),r=m%60;return r?`${h}h ${String(r).padStart(2,"0")}m`:`${h}h`};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let retText=null, workText=null;
 function dials(){return {roundMin:+$("rnd").value, expiryDays:+$("exp").value, idleDays:+$("idl").value}}
 function table(cols,rows){
-  if(!rows.length)return '<p class="mut">None found.</p>';
-  let h="<table><tr>"+cols.map(c=>`<th${c.r?' class="r"':''}>${c.h}</th>`).join("")+"</tr>";
-  for(const r of rows)h+="<tr>"+cols.map((c,i)=>`<td${c.r?' class="r"':''}>${r[i]}</td>`).join("")+"</tr>";
-  return h+"</table>";
+  if(!rows.length)return '<p class="none">None found.</p>';
+  let h="<table><thead><tr>"+cols.map(c=>`<th${c.r?' class="r"':''}>${c.h}</th>`).join("")+"</tr></thead><tbody>";
+  for(const r of rows)h+="<tr>"+cols.map((c,i)=>`<td class="${c.r?'r':''}${c.k?' key':''}">${r[i]}</td>`).join("")+"</tr>";
+  return h+"</tbody></table>";
 }
+const count=(id,n,word)=>{$(id).textContent=n+" "+word+(n===1?"":"s")};
 function render(){
   if(retText===null||workText===null)return;
   const r=window.__lastResult=RetainerBurn.audit(retText,workText,dials());
-  $("out").classList.remove("hidden");
-  if(r.error){$("findings").innerHTML='<p class="up">'+r.error+'</p>';return}
-  $("t_refusals").innerHTML=table([{h:"File"},{h:"Line"},{h:"Reason"}],r.refusals.map(x=>[x.file,x.line,x.reason]));
+  $("empty").classList.add("hidden");$("out").classList.remove("hidden");
+  $("csv").disabled=$("print").disabled=false;
+  if(r.error){$("findings").innerHTML='<p class="up">'+esc(r.error)+'</p>';return}
+  $("t_refusals").innerHTML=table([{h:"File"},{h:"Line"},{h:"Reason"}],r.refusals.map(x=>['<code>'+esc(x.file)+'</code>','<code>line '+x.line+'</code>',esc(x.reason)]));
+  count("n_refusals",r.refusals.length,"row");
   const sa=r.selfAudit;
-  $("selfaudit").innerHTML="<ul>"+sa.checks.map(c=>`<li class="${c.pass?'ok':'up'}">${c.pass?'&#10003;':'&#10007;'} ${c.name}</li>`).join("")+"</ul>";
+  $("selfaudit").innerHTML="<ul>"+sa.checks.map(c=>`<li class="${c.pass?'ok':'up'}">${c.pass?'&#10003;':'&#10007;'} ${esc(c.name)}</li>`).join("")+"</ul>";
   if(r.withheld){
-    $("trustbanner").style.display="block";
-    $("trustwhy").textContent=sa.checks.filter(c=>!c.pass).map(c=>c.name).join("; ");
-    $("banner").style.display="none";$("findings").style.display="none";return;
+    $("trustbanner").style.display="flex";
+    $("trustwhy").textContent="Failed: "+sa.checks.filter(c=>!c.pass).map(c=>c.name).join("; ");
+    $("banner").style.display="none";$("okbanner").style.display="none";$("findings").style.display="none";return;
   }
   $("trustbanner").style.display="none";$("findings").style.display="";
   const t=r.totals;
+  const idleSum=r.idle.reduce((s,i)=>s+i.remainingCents,0);
   $("s_purch").textContent=money(t.purchasedCents);
+  $("s_purchd").textContent=r.clients.length+" retainer clients";
   $("s_over").textContent=money(t.overageCents);
   $("s_overpct").textContent=t.overagePct+"% of purchased";
-  $("s_idle").textContent=money(r.idle.reduce((s,i)=>s+i.remainingCents,0));
+  $("s_idle").textContent=money(idleSum);
+  $("s_idled").textContent=r.idle.length+" client"+(r.idle.length===1?"":"s")+" gone quiet";
   $("s_rows").textContent=r.rows.total+" / "+r.rows.refused;
-  $("banner").style.display=r.banner?"block":"none";
-  $("bannerwhy").textContent=hm(t.overageMin)+" of work ("+money(t.overageCents)+") has no retainer money behind it — "+t.overagePct+"% of everything purchased";
-  $("t_over").innerHTML=table([{h:"Client"},{h:"Hours past the money",r:1},{h:"Value",r:1}],
-    r.overage.map(o=>[o.key,hm(o.minutes),'<span class="up">'+money(o.cents)+'</span>']));
-  $("t_idle").innerHTML=table([{h:"Client"},{h:"Unused balance",r:1},{h:"Last work"}],
-    r.idle.map(i=>[i.key,money(i.remainingCents),i.lastWorkDate||'<span class="mut">never</span>']));
-  $("t_unret").innerHTML=table([{h:"Client"},{h:"Entries",r:1},{h:"Hours",r:1}],
-    r.unretained.map(u=>[u.key,u.entries,hm(u.minutes)]));
-  $("t_forf").innerHTML=table([{h:"Client"},{h:"Block"},{h:"Expired hours",r:1},{h:"Value",r:1}],
-    r.forfeits.map(f=>[f.key,f.blockDate,hm(f.minutes),money(f.cents)]));
-  $("t_dups").innerHTML=table([{h:"Client"},{h:"Date"},{h:"Minutes",r:1},{h:"Held line",r:1},{h:"Matches line",r:1}],
-    r.duplicates.map(d=>[d.key,d.date,d.minutes,d.heldLine,d.matchedLine]));
+  $("s_rowsd").textContent=r.rows.held+" held as duplicate"+(r.rows.held===1?"":"s");
+  $("banner").style.display=r.banner?"flex":"none";
+  $("okbanner").style.display=r.banner?"none":"flex";
+  const why=hm(t.overageMin)+" of work ("+money(t.overageCents)+") has no retainer money behind it — "+t.overagePct+"% of everything purchased";
+  $("bannerwhy").textContent=why+". Decide what to bill before the next block is sold.";
+  $("okwhy").textContent=why+".";
+  // burn meter
+  const cl=r.clients.filter(c=>c.purchasedMin>0);
+  const maxR=Math.max(1,...cl.map(c=>c.workedMin/c.purchasedMin));
+  const sorted=[...cl].sort((a,b)=>(b.workedMin/b.purchasedMin)-(a.workedMin/a.purchasedMin));
+  $("burn").innerHTML=sorted.map(c=>{
+    const cap=100/maxR, ratio=c.workedMin/c.purchasedMin;
+    const fill=Math.min(ratio,1)*cap, over=Math.max(0,ratio-1)*cap;
+    const lab=c.overageMin?('+'+hm(c.overageMin)+' · '+money(c.overageCents)):(c.idle?('idle · '+money(c.remainingCents)):(c.remainingMin?(hm(c.remainingMin)+' left'):'dead even'));
+    return `<div class="row"><div class="nm" title="${esc(c.key)}">${esc(c.key)}</div>
+      <div class="meter ${c.idle?'idle':''}" role="img" aria-label="${esc(c.key)}: ${hm(c.workedMin)} worked of ${hm(c.purchasedMin)} purchased"><div class="fill" style="width:${fill}%"></div>${over?`<div class="over" style="left:${cap}%;width:${over}%"></div>`:''}<div class="cap" style="left:calc(${cap}% - 1px)"></div></div>
+      <div class="val ${c.overageMin?'hot':''}">${lab}</div></div>`;}).join("");
+  $("t_over").innerHTML=table([{h:"Client",k:1},{h:"Past the money",r:1},{h:"Value",r:1}],
+    r.overage.map(o=>[esc(o.key),hm(o.minutes),'<span class="up">'+money(o.cents)+'</span>']));
+  count("n_over",r.overage.length,"client");
+  $("t_idle").innerHTML=table([{h:"Client",k:1},{h:"Unused",r:1},{h:"Last work"}],
+    r.idle.map(i=>[esc(i.key),money(i.remainingCents),i.lastWorkDate?'<span class="chip warn">'+i.lastWorkDate+'</span>':'<span class="mut">never</span>']));
+  count("n_idle",r.idle.length,"client");
+  $("t_unret").innerHTML=table([{h:"Client",k:1},{h:"Entries",r:1},{h:"Hours",r:1}],
+    r.unretained.map(u=>['<span class="chip info">NO BLOCK</span> '+esc(u.key),u.entries,hm(u.minutes)]));
+  count("n_unret",r.unretained.length,"client");
+  $("t_forf").innerHTML=table([{h:"Client",k:1},{h:"Block"},{h:"Expired hours",r:1},{h:"Value",r:1}],
+    r.forfeits.map(f=>[esc(f.key),f.blockDate,hm(f.minutes),money(f.cents)]));
+  count("n_forf",r.forfeits.length,"block");
+  $("t_dups").innerHTML=table([{h:"Client",k:1},{h:"Date"},{h:"Minutes",r:1},{h:"Held line",r:1},{h:"Matches line",r:1}],
+    r.duplicates.map(d=>[esc(d.key),d.date,d.minutes,'<span class="chip warn">'+d.heldLine+'</span>',d.matchedLine]));
+  count("n_dups",r.duplicates.length,"entry");
+  if(r.duplicates.length!==1)$("n_dups").textContent=r.duplicates.length+" entries";
   $("t_clients").innerHTML=table(
-    [{h:"Client"},{h:"Purchased",r:1},{h:"Worked",r:1},{h:"Overage",r:1},{h:"Remaining",r:1},{h:"Last work"}],
-    r.clients.map(c=>[c.key,hm(c.purchasedMin),hm(c.workedMin),
+    [{h:"Client",k:1},{h:"Purchased",r:1},{h:"Worked",r:1},{h:"Overage",r:1},{h:"Remaining",r:1},{h:"Last work"}],
+    r.clients.map(c=>[esc(c.key),hm(c.purchasedMin),hm(c.workedMin),
       c.overageMin?'<span class="up">'+hm(c.overageMin)+'</span>':'—',
-      money(c.remainingCents)+(c.idle?' <span class="up">(idle)</span>':''),c.lastWorkDate||'<span class="mut">never</span>']));
+      money(c.remainingCents)+(c.idle?' <span class="chip warn">idle</span>':''),c.lastWorkDate||'<span class="mut">never</span>']));
+  count("n_clients",r.clients.length,"client");
 }
-function hook(id,setter){$(id).addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;
-  const rd=new FileReader();rd.onload=()=>{setter(rd.result);render()};rd.readAsText(f);});}
-hook("fret",t=>retText=t);hook("fwork",t=>workText=t);
+function loaded(which,name,text){
+  $(which==="ret"?"stateret":"statework").textContent="✓ "+name+" · "+Math.max(0,text.trim().split(/\r?\n/).length-1)+" rows";
+  $(which==="ret"?"dropret":"dropwork").classList.add("loaded");
+  if(retText===null||workText===null)$("waiting").textContent="Now load the "+(retText===null?"retainers":"worklog")+" file.";
+}
+function hook(input,drop,which){
+  const read=f=>{const rd=new FileReader();rd.onload=()=>{which==="ret"?retText=rd.result:workText=rd.result;loaded(which,f.name,rd.result);render()};rd.readAsText(f);};
+  $(input).addEventListener("change",e=>{const f=e.target.files[0];if(f)read(f)});
+  ["dragenter","dragover"].forEach(ev=>$(drop).addEventListener(ev,e=>{e.preventDefault();$(drop).classList.add("over")}));
+  ["dragleave","drop"].forEach(ev=>$(drop).addEventListener(ev,e=>{e.preventDefault();$(drop).classList.remove("over")}));
+  $(drop).addEventListener("drop",e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)read(f)});
+}
+hook("fret","dropret","ret");hook("fwork","dropwork","work");
 $("loadsample").addEventListener("click",()=>{
   retText=document.getElementById("sampleret").textContent.trim()+"\n";
-  workText=document.getElementById("samplework").textContent.trim()+"\n";render();
+  workText=document.getElementById("samplework").textContent.trim()+"\n";
+  loaded("ret","thistledown-retainers.csv",retText);loaded("work","thistledown-worklog.csv",workText);
+  $("waiting").textContent="Thistledown Digital · 362 rows · fictional";render();
 });
 ["rnd","exp","idl"].forEach(id=>$(id).addEventListener("change",render));
+$("csv").addEventListener("click",()=>{
+  const r=window.__lastResult;if(!r)return;
+  const rows=[["finding","client","detail","hours","amount"]];
+  if(!r.withheld){
+    r.overage.forEach(o=>rows.push(["worked past the money",o.key,"no block left",hm(o.minutes),money(o.cents)]));
+    r.idle.forEach(i=>rows.push(["idle balance",i.key,"last work "+(i.lastWorkDate||"never"),hm(i.remainingMin),money(i.remainingCents)]));
+    r.unretained.forEach(u=>rows.push(["no retainer on file",u.key,u.entries+" entries",hm(u.minutes),""]));
+    r.forfeits.forEach(f=>rows.push(["expired block",f.key,"block "+f.blockDate,hm(f.minutes),money(f.cents)]));
+    r.duplicates.forEach(d=>rows.push(["duplicate held",d.key,d.date+" line "+d.heldLine+" matches line "+d.matchedLine,d.minutes+" min",""]));
+  }
+  r.refusals.forEach(x=>rows.push(["refused row","",x.file+" line "+x.line+": "+x.reason,"",""]));
+  const blob=new Blob([rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\n")+"\n"],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="retainer-findings.csv";document.body.appendChild(a);a.click();a.remove();
+});
+$("print").addEventListener("click",()=>window.print());
+$("theme").addEventListener("click",()=>{const d=document.documentElement;
+  d.dataset.theme=(d.dataset.theme==="dark"||(!d.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches))?"light":"dark";});
 window.__render=render;window.__setCsv=(a,b)=>{retText=a;workText=b;render()};
 })();
 </script>

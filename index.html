@@ -4,51 +4,83 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Retainer Burn Tracker — free tool</title>
+<meta name="description" content="Free, offline retainer burn tracker from the Build It With AI channel.">
 <style>
-body{margin:0;background:#f9f9f6;color:#222831;font:16px/1.55 "Avenir Next","Segoe UI",system-ui,sans-serif}
-.wrap{max-width:760px;margin:0 auto;padding:40px 18px 80px}
-h1{font-size:30px;margin:0 0 6px}
-.sub{color:#6a7180;margin:0 0 26px}
-a.big{display:block;background:#27364B;color:#fff;text-decoration:none;font-size:19px;font-weight:700;
-border-radius:10px;padding:16px 20px;margin:10px 0}
-a.big span{display:block;font-size:13.5px;font-weight:400;opacity:.92;margin-top:2px}
-a.row{display:block;background:#fff;border:1px solid #d6d3c8;color:#222831;text-decoration:none;
-border-radius:10px;padding:12px 16px;margin:8px 0}
-a.row b{color:#3E8E75}
-a.row span{display:block;font-size:13.5px;color:#6a7180}
-.warn{background:#fdf6e0;border:1px solid #8a6a12;color:#6c5410;border-radius:10px;padding:10px 14px;
-font-size:14px;margin:16px 0}
-.foot{color:#6a7180;font-size:13.5px;margin-top:30px;border-top:1px solid #d6d3c8;padding-top:14px}
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --surface-2:#eef2f4; --ink:#121a24; --mute:#4f5b69; --dim:#7b8796; --line:#dfe5ea;
+  --brand:#2b7a62; --brand-2:#27364B; --brand-ink:#ffffff; --brand-soft:#e3f2ec;
+  --good:#16865a; --good-bg:#e7f6ef; --warn:#a85a0a; --warn-bg:#fdf1e2; --bad:#c2333a; --bad-bg:#fdecec; --info:#2563c9; --info-bg:#e8f0fd;
+  --r:14px; --shadow:0 1px 2px rgba(16,26,40,.05),0 10px 28px -14px rgba(16,26,40,.24);
+  --f:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --m:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#0d131b; --surface:#141c26; --surface-2:#1b2532; --ink:#e9f0f5; --mute:#9fb0c0; --dim:#6b7c8e; --line:#253243;
+  --brand:#5cc8a3; --brand-2:#8fa7c7; --brand-ink:#08201a; --brand-soft:#123129;
+  --good:#3fbf8a; --good-bg:#10291f; --warn:#e3a04a; --warn-bg:#2d200f; --bad:#f06b70; --bad-bg:#2e1416; --info:#6ea0f5; --info-bg:#132036;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -12px rgba(0,0,0,.6);}}
+:root[data-theme=dark]{
+  --bg:#0d131b; --surface:#141c26; --surface-2:#1b2532; --ink:#e9f0f5; --mute:#9fb0c0; --dim:#6b7c8e; --line:#253243;
+  --brand:#5cc8a3; --brand-2:#8fa7c7; --brand-ink:#08201a; --brand-soft:#123129;
+  --good:#3fbf8a; --good-bg:#10291f; --warn:#e3a04a; --warn-bg:#2d200f; --bad:#f06b70; --bad-bg:#2e1416; --info:#6ea0f5; --info-bg:#132036;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -12px rgba(0,0,0,.6);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 var(--f);-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px}
+.bar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:12px;height:56px}
+.logo{width:30px;height:30px;border-radius:9px;background:var(--brand);display:grid;place-items:center;color:var(--brand-ink);flex:none}
+.bar b{font-weight:750;white-space:nowrap} .sp{flex:1}
+.lnk{color:var(--mute);text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap} .lnk:hover{color:var(--ink)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:7px 11px;font:700 14px var(--f);cursor:pointer}
+@media(max-width:560px){.hide-s{display:none}}
+.eyebrow{font:700 12px var(--m);letter-spacing:.12em;text-transform:uppercase;color:var(--brand);margin-top:40px}
+h1{font-size:clamp(32px,6vw,52px);line-height:1.03;letter-spacing:-.035em;margin:10px 0 12px;font-weight:820}
+.sub{color:var(--mute);font-size:17px;margin:0 0 26px;max-width:62ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+a.open{display:flex;gap:18px;align-items:center;text-decoration:none;color:var(--brand-ink);background:var(--brand);border-radius:18px;padding:22px 24px;box-shadow:0 18px 40px -20px var(--brand);transition:transform .12s}
+a.open:hover{transform:translateY(-2px)}
+a.open .t{font-size:21px;font-weight:800;letter-spacing:-.01em}
+a.open .s{font-size:14px;opacity:.88;margin-top:2px}
+a.open .arr{margin-left:auto;font-size:28px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:14px 0 30px}
+.stats div{padding:14px 16px;border-right:1px solid var(--line)} .stats div:last-child{border-right:0}
+.stats b{display:block;font-size:22px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stats span{font-size:12.5px;color:var(--mute)}
+@media(max-width:520px){.stats{grid-template-columns:1fr}.stats div{border-right:0;border-bottom:1px solid var(--line)}.stats div:last-child{border-bottom:0}}
+h2{font-size:18px;margin:0 0 10px;letter-spacing:-.01em}
+.files{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:720px){.files{grid-template-columns:1fr 1fr}}
+a.file{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;text-decoration:none;color:var(--ink);transition:border-color .15s}
+a.file:hover{border-color:var(--brand)}
+a.file .fi{flex:none;width:34px;height:34px;border-radius:9px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font:800 12px var(--m)}
+a.file b{display:block;font-size:14.5px} a.file span span{display:block;font-size:13px;color:var(--mute)}
+a.file .go{margin-left:auto;color:var(--dim);font-weight:800}
+.warn{margin:26px 0 0;padding:16px 18px;border-radius:var(--r);background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);font-size:14.5px}
+.warn b{color:var(--warn)} .warn a{color:var(--ink);font-weight:700}
+footer{color:var(--dim);font-size:13px;padding:30px 0 50px;border-top:1px solid var(--line);margin-top:34px}
+footer a{color:var(--mute)}
 </style>
 </head>
 <body>
-<div class="wrap">
-<h1>The Retainer Burn Tracker</h1>
-<p class="sub">Build It With AI &middot; Episode 43 &middot; free, offline, no account. Hours purchased vs
-hours worked, per client, oldest money first: the overage nobody billed, the balances going stale,
-and the client working off no retainer at all.</p>
-
-<a class="big" href="Retainer_Burn_Tracker.html">Open the Retainer Burn Tracker
-<span>One self-contained HTML file. Click "Load the Thistledown sample" or load your own
-retainers + worklog CSVs. Nothing leaves your machine.</span></a>
-
-<a class="row" href="retainer-burn-tracker-kit.zip"><b>Download the whole kit (zip)</b>
-<span>Tool + sample books + spec + prompts + independent Python checker + both wrong builds.</span></a>
-<a class="row" href="sample/retainers.csv"><b>Sample retainers</b> — Thistledown Digital
-<span>Fictional 6-person studio; with sample/worklog.csv, 362 rows, Oct 2025 &ndash; Nov 2026.</span></a>
-<a class="row" href="SPEC.md"><b>SPEC.md</b> — the law the tool implements<span>Integer minutes and
-cents, refusals, FIFO burn, expiry and idle dials, the banner, the self-audit.</span></a>
-<a class="row" href="PROMPTS.md"><b>PROMPTS.md</b> — the three prompts, exactly as sent on camera</a>
-<a class="row" href="checker.py"><b>checker.py</b> — the blind Python rival
-<span>Written from the spec alone; 216 audits, 26,178 values, zero disagreements with the page.</span></a>
-
-<div class="warn">The two wrong builds from the episode are kept runnable, lies annotated:
-<a href="v1.html">v1</a> ("You are 88.38 hours over. Bill somebody.") and <a href="v2.html">v2</a>
-("$40,982 expired or owed" &mdash; about eight times the truth). Don't run your business on either.</div>
-
-<div class="foot">Sample data is fictional; every client is invented. The page reads lists, not
-contracts &mdash; billing, forgiving or renegotiating an overage stays your call. From the
-<em>Build It With AI</em> channel. No warranty.</div>
-</div>
+<header class="bar"><div class="wrap">
+  <div class="logo" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg></div><b>The Retainer Burn Tracker</b>
+  <span class="sp"></span>
+  <a class="lnk hide-s" href="https://jonathangeorgegatz.github.io/tools/">More free tools</a>
+  <a class="lnk hide-s" href="https://www.youtube.com/@jonathangatz" target="_blank" rel="noopener">YouTube</a>
+  <button class="btn" id="theme" aria-label="Toggle dark mode">◐</button>
+</div></header>
+<main class="wrap">
+  <div class="eyebrow">Build It With AI · Episode 43 · free, offline, no account</div>
+  <h1>Find the hours you worked that nobody paid for.</h1>
+  <p class="sub">Hours purchased vs hours worked, per client, oldest money first: the overage nobody billed, the balances going stale, and the client working off no retainer at all. One HTML file; nothing leaves your computer.</p>
+  <a class="open" href="Retainer_Burn_Tracker.html"><span><span class="t">Open The Retainer Burn Tracker</span><span class="s" style="display:block">Press “Try the sample business”, or drop in your own retainers + worklog CSVs.</span></span><span class="arr">→</span></a>
+  <div class="card stats"><div><b>216</b><span>paired audits vs an independent Python rival</span></div><div><b>0</b><span>disagreements across 26,178 values</span></div><div><b>0</b><span>network requests — it runs offline</span></div></div>
+  <h2>Everything in the kit</h2>
+  <div class="files"><a class="file card" href="retainer-burn-tracker-kit.zip"><span class="fi">ZIP</span><span><b>Download the whole kit</b><span>Tool, sample files, spec, prompts, Python checker, both wrong builds</span></span><span class="go">→</span></a><a class="file card" href="sample/retainers.csv"><span class="fi">CSV</span><span><b>Sample retainers — Thistledown Digital</b><span>Fictional 6-person studio; with the worklog, 362 rows, Oct 2025 – Nov 2026</span></span><span class="go">→</span></a><a class="file card" href="sample/worklog.csv"><span class="fi">CSV</span><span><b>Sample worklog</b><span>Every hour Thistledown logged, typos and all</span></span><span class="go">→</span></a><a class="file card" href="SPEC.md"><span class="fi">MD</span><span><b>SPEC.md — the law it follows</b><span>Integer minutes and cents, refusals, oldest-first burn, expiry and idle dials</span></span><span class="go">→</span></a><a class="file card" href="PROMPTS.md"><span class="fi">MD</span><span><b>PROMPTS.md</b><span>The three prompts, exactly as sent on camera</span></span><span class="go">→</span></a><a class="file card" href="checker.py"><span class="fi">PY</span><span><b>checker.py — the blind Python rival</b><span>Written from the spec alone, to check the page</span></span><span class="go">→</span></a></div>
+  <div class="warn"><b>Kept on purpose:</b> the two wrong builds from the episode still run, lies annotated — <a href="v1.html">v1</a> (“You are 88.38 hours over. Bill somebody.”) and <a href="v2.html">v2</a> (“$40,982 expired or owed” — about eight times the truth). Don’t run your business on either.</div>
+  <footer>Sample data is fictional; every client is invented. The page reads lists, not contracts — billing, forgiving or renegotiating an overage stays your call. From <a href="https://www.youtube.com/@jonathangatz">Build It With AI</a>. No warranty.</footer>
+</main>
+<script>document.getElementById("theme").addEventListener("click",()=>{const r=document.documentElement;r.dataset.theme=(r.dataset.theme==="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches))?"light":"dark";});</script>
 </body>
 </html>

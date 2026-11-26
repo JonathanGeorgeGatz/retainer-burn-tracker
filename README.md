@@ -7,8 +7,8 @@ Fully offline — one HTML file, no account, nothing leaves your machine.
 
 ## Files
 
-- **Retainer_Burn_Tracker.html** — the tool. Open in any browser; click *Load the
-  Thistledown sample* or load your own two CSVs.
+- **Retainer_Burn_Tracker.html** — the tool. Open in any browser; press *Try the
+  sample business* (Thistledown Digital) or drop in your own two CSVs.
 - **sample/retainers.csv + sample/worklog.csv** — Thistledown Digital, a fictional
   6-person web & marketing studio: 8 retainer clients plus one who never signed one,
   362 rows, Oct 2025 – Nov 2026. Every client is invented.
